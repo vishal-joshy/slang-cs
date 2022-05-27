@@ -1,44 +1,67 @@
 using Xunit;
 using SLANG;
 
-public class TestClass
+public class AbstractSynatxTreeTest
 {
   [Theory]
-  [InlineData(1, Operator.PLUS, 3, 4)]
-  [InlineData(4, Operator.MINUS, 2, 2)]
-  [InlineData(3, Operator.MULT, 2, 6)]
-  [InlineData(6, Operator.DIV, 2, 3)]
-  public void BinaryConstatTest(int a, Operator op, int b, int result)
+  [InlineData(1, OPERATOR.PLUS, 3, 4)]
+  [InlineData(4, OPERATOR.MINUS, 2, 2)]
+  [InlineData(3, OPERATOR.MULT, 2, 6)]
+  [InlineData(6, OPERATOR.DIV, 2, 3)]
+  public void BinaryExpression(int a, OPERATOR op, int b, int result)
   {
     Expression e1 = new NumericConstant(a);
     Expression e2 = new NumericConstant(b);
 
-    Expression binaryExp = new BinaryConstant(e1, op, e2);
+    Expression binaryExp = new BinaryExpression(e1, op, e2);
 
     Assert.Equal(binaryExp.Evaluate(null), result);
   }
 
   [Theory]
-  [InlineData(1, Operator.MINUS, -1)]
-  [InlineData(1, Operator.PLUS, 1)]
-  public void UnaryConstantTest(int a, Operator op, int result)
+  [InlineData(1, OPERATOR.MINUS, -1)]
+  [InlineData(1, OPERATOR.PLUS, 1)]
+  public void UnaryExpressionTest(int a, OPERATOR op, int result)
   {
     Expression e1 = new NumericConstant(a);
 
-    Expression unaryExp = new UnaryConstant(op, e1);
+    Expression unaryExp = new UnaryExpression(op, e1);
 
-    Assert.Equal(unaryExp.Evaluate(null), result);
+    Assert.Equal(result, unaryExp.Evaluate(null));
   }
 
   // AST test for 3(5+6)
   [Fact]
-  public void BinaryConstatTest2()
+  public void BinaryExpressionTest2()
   {
     Expression e1 = new NumericConstant(3);
     Expression e2 = new NumericConstant(5);
     Expression e3 = new NumericConstant(6);
-    Expression binaryExp = new BinaryConstant(e1,Operator.MULT ,new BinaryConstant(e2, Operator.PLUS, e3));
-    Assert.Equal(binaryExp.Evaluate(null), 33);
+    Expression binaryExp = new BinaryExpression(e1, OPERATOR.MULT, new BinaryExpression(e2, OPERATOR.PLUS, e3));
+    Assert.Equal(33, binaryExp.Evaluate(null));
+  }
+}
+
+
+public class LexicalAnalyzerTest
+{
+  [Theory]
+  [InlineData("6", TOKEN.DOUBLE)]
+  [InlineData("+", TOKEN.PLUS)]
+  [InlineData("(", TOKEN.OPAREN)]
+  void GetTokenTest(string s, TOKEN expected)
+  {
+    LexicalAnalyzer la = new LexicalAnalyzer(s);
+    Assert.Equal(expected, la.GetToken());
   }
 
+  [Theory]
+  [InlineData("2", 2)]
+  [InlineData("+", 0)]
+  void GetNumberTest(string s, double expected)
+  {
+    LexicalAnalyzer la = new LexicalAnalyzer(s);
+    la.GetToken();
+    Assert.Equal(expected, la.GetNumber());
+  }
 }
