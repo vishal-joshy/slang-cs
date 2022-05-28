@@ -57,10 +57,9 @@ namespace SLANG
             if (int.TryParse(_expression[_index].ToString(), out int n))    //Numerics
             {
               string tempString = "";
-              while (_index < _length && int.TryParse(_expression[_index].ToString(), out int m))
+              while (_index < _length && int.TryParse(_expression[_index].ToString(), out int m)) //loop to get the whole number
               {
                 tempString = tempString + Convert.ToString(_expression[_index]);
-                Console.WriteLine(_number);
                 _index++;
               }
               token = TOKEN.DOUBLE;

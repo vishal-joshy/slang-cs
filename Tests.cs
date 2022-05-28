@@ -3,12 +3,19 @@ using SLANG;
 
 public class AbstractSynatxTreeTest
 {
+  [Fact]
+  public void NumericConstantTest()
+  {
+    Expression e1 = new NumericConstant(5);
+    Assert.Equal(5, e1.Evaluate(null));
+  }
+
   [Theory]
   [InlineData(1, OPERATOR.PLUS, 3, 4)]
   [InlineData(4, OPERATOR.MINUS, 2, 2)]
   [InlineData(3, OPERATOR.MULT, 2, 6)]
   [InlineData(6, OPERATOR.DIV, 2, 3)]
-  public void BinaryExpression(int a, OPERATOR op, int b, int result)
+  public void BinaryExpressionTest(int a, OPERATOR op, int b, int result)
   {
     Expression e1 = new NumericConstant(a);
     Expression e2 = new NumericConstant(b);
@@ -58,10 +65,23 @@ public class LexicalAnalyzerTest
   [Theory]
   [InlineData("2", 2)]
   [InlineData("+", 0)]
+  [InlineData("364", 364)]
   void GetNumberTest(string s, double expected)
   {
     LexicalAnalyzer la = new LexicalAnalyzer(s);
     la.GetToken();
     Assert.Equal(expected, la.GetNumber());
+  }
+}
+public class RDParserTest
+{
+  [Theory]
+  [InlineData("2+3",5)]
+  [InlineData("2+(3*4)", 14)]
+  [InlineData("2+3*4-5", 9)]
+  void RDParserTest1(string expressionString, int expected)
+  {
+    RDParser parser = new RDParser(expressionString);
+    Assert.Equal(expected, parser.CallExpr().Evaluate(null));
   }
 }
