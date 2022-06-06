@@ -2,18 +2,35 @@ using System;
 
 namespace SLANG
 {
+  public struct ValueTable
+  {
+    public TOKEN tok;          // Token id
+    public String Value;       // Token string
+    public ValueTable(TOKEN tok, String Value)
+    {
+      this.tok = tok;
+      this.Value = Value;
+    }
+  }
+
   public class LexicalAnalyzer
   {
     private string _expression;
     private int _index;
     private int _length;
     private double _number;
+    private ValueTable[] _valueTable = null;
+    private string _lastString;
 
     public LexicalAnalyzer(string s)
     {
       _expression = s;
       _length = _expression.Length;
       _index = 0;
+
+      _valueTable = new ValueTable[2];
+      _valueTable[0] = new ValueTable(TOKEN.PRINT, "PRINT");
+      _valueTable[1] = new ValueTable(TOKEN.PRINTLN, "PRINTLINE");
     }
 
     public TOKEN GetToken()
@@ -52,9 +69,33 @@ namespace SLANG
           token = TOKEN.CPAREN;
           _index++;
           break;
+        case ';':
+          token = TOKEN.SEMI;
+          _index++;
+          break;
         default:
           {
-            if (int.TryParse(_expression[_index].ToString(), out int n))    //Numerics
+            if (char.IsLetter(_expression[_index]))
+            {
+              String tem = Convert.ToString(_expression[_index]);
+              _index++;
+              while (_index < _length && (char.IsLetterOrDigit(_expression[_index]) ||
+              _expression[_index] == '_'))
+              {
+                tem += _expression[_index];
+                _index++;
+              }
+              tem = tem.ToUpper();
+              for (int i = 0; i < this._valueTable.Length; ++i)
+              {
+                if (_valueTable[i].Value.CompareTo(tem) == 0)
+                  return _valueTable[i].tok;
+
+              }
+              this._lastString = tem;
+              return TOKEN.UNQUOTED_STRING;
+            }
+            else if (int.TryParse(_expression[_index].ToString(), out int n))    //Numerics
             {
               string tempString = "";
               while (_index < _length && int.TryParse(_expression[_index].ToString(), out int m)) //loop to get the whole number
@@ -72,6 +113,7 @@ namespace SLANG
             break;
           }
       }
+      Console.WriteLine("Token: " + token);
       return token;
     }
 

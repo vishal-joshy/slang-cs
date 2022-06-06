@@ -14,6 +14,12 @@ namespace SLANG
     CPAREN,
 
     ILLEGAL_TOKEN,
-    NULL
+    NULL,
+
+    PRINT, // Print
+    PRINTLN, // PrintLine
+    UNQUOTED_STRING,
+    SEMI
+
   }
 }
