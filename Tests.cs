@@ -85,3 +85,18 @@ public class RDParserTest
     Assert.Equal(expected, parser.CallExpr().Evaluate(null));
   }
 }
+
+public class StatementTest{
+  [Fact]
+  public void PrintStatementTest()
+  {
+    PrintStatement ps = new PrintStatement(new NumericConstant(5));
+    Assert.Equal(true, ps.Execute(null));
+  }
+  [Fact]
+  public void PrintLineStatementTest()
+  {
+    PrintLineStatement pst = new PrintLineStatement(new NumericConstant(5));
+    Assert.Equal(true, pst.Execute(null));
+  }
+}
