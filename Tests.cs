@@ -56,6 +56,7 @@ public class LexicalAnalyzerTest
   [InlineData("6", TOKEN.DOUBLE)]
   [InlineData("+", TOKEN.PLUS)]
   [InlineData("(", TOKEN.OPAREN)]
+  [InlineData("PRINT", TOKEN.PRINT)]
   void GetTokenTest(string s, TOKEN expected)
   {
     LexicalAnalyzer la = new LexicalAnalyzer(s);
@@ -91,12 +92,12 @@ public class StatementTest{
   public void PrintStatementTest()
   {
     PrintStatement ps = new PrintStatement(new NumericConstant(5));
-    Assert.Equal(true, ps.Execute(null));
+    Assert.True(ps.Execute(null));
   }
   [Fact]
   public void PrintLineStatementTest()
   {
     PrintLineStatement pst = new PrintLineStatement(new NumericConstant(5));
-    Assert.Equal(true, pst.Execute(null));
+    Assert.True(pst.Execute(null));
   }
 }
