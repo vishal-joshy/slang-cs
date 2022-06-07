@@ -1,8 +1,12 @@
+using System.Collections;
+using System.Collections.Generic;
+
 namespace SLANG
 {
   public class RDParser : LexicalAnalyzer
   {
     private TOKEN _currentToken;
+    private TOKEN _lastToken;
 
     public RDParser(String str) : base(str) { }
 
@@ -11,6 +15,76 @@ namespace SLANG
       _currentToken = GetToken();
       return Expr();
     }
+
+    protected TOKEN GetNext()
+    {
+      _lastToken = _currentToken;
+      _currentToken = GetToken();
+      return _currentToken;
+    }
+
+    public ArrayList Parse()
+    {
+      GetNext();
+      return StatementList();
+    }
+
+    private ArrayList StatementList()
+    {
+      ArrayList arr = new ArrayList();
+      while (_currentToken != TOKEN.NULL)
+      {
+        Stmt temp = Statement();
+        if (temp != null)
+        {
+          arr.Add(temp);
+        }
+      }
+      return arr;
+    }
+
+    private Stmt Statement()
+    {
+      Stmt retval = null;
+      switch (_currentToken)
+      {
+        case TOKEN.PRINT:
+          retval = ParsePrintStatement();
+          GetNext();
+          break;
+        case TOKEN.PRINTLN:
+          retval = ParsePrintLNStatement();
+          GetNext();
+          break;
+        default:
+          throw new Exception("Invalid statement");
+      }
+      return retval;
+    }
+    private Stmt ParsePrintStatement()
+    {
+      GetNext();
+      Expression a = Expr();
+
+      if (_currentToken != TOKEN.SEMI)
+      {
+        throw new Exception("; is expected");
+      }
+      return new PrintStatement(a);
+    }
+
+    private Stmt ParsePrintLNStatement()
+    {
+      GetNext();
+      Expression a = Expr();
+
+      if (_currentToken != TOKEN.SEMI)
+      {
+        throw new Exception("; is expected");
+      }
+      return new PrintLineStatement(a);
+    }
+
 
     //<Expr> ::= <Term> | Term { + | - } <Expr>
     public Expression Expr()
