@@ -29,6 +29,7 @@ namespace SLANG
       return StatementList();
     }
 
+    // <stmtlist> := { <statement> }+
     private ArrayList StatementList()
     {
       ArrayList arr = new ArrayList();
@@ -43,6 +44,7 @@ namespace SLANG
       return arr;
     }
 
+    // <statement> := <printstmt> | <printlinestmt>
     private Stmt Statement()
     {
       Stmt retval = null;
@@ -61,6 +63,8 @@ namespace SLANG
       }
       return retval;
     }
+
+    //  <printstmt> := print <expr >;
     private Stmt ParsePrintStatement()
     {
       GetNext();
@@ -72,7 +76,7 @@ namespace SLANG
       }
       return new PrintStatement(a);
     }
-
+    //  <printlinestmt> := printline <expr >;
     private Stmt ParsePrintLNStatement()
     {
       GetNext();
