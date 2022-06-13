@@ -19,7 +19,19 @@ namespace SLANG
     PRINT, // Print
     PRINTLN, // PrintLine
     UNQUOTED_STRING,
-    SEMI
+    SEMI,
+
+    // variables
+    VAR_NUMBER,
+    VAR_STRING,
+    VAR_BOOLEAN,
+    ASSIGN,
+
+    NUMERIC,
+    BOOLEAN_TRUE,
+    BOOLEAN_FALSE,
+    STRING,
+
 
   }
 }
