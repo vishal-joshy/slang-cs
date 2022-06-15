@@ -5,37 +5,21 @@ namespace SLANG
 {
   public class RDParser : LexicalAnalyzer
   {
-    private TOKEN _currentToken;
-    private TOKEN _lastToken;
-
     public RDParser(String str) : base(str) { }
 
-    public Expression CallExpr()
-    {
-      _currentToken = GetToken();
-      return Expr();
-    }
-
-    protected TOKEN GetNext()
-    {
-      _lastToken = _currentToken;
-      _currentToken = GetToken();
-      return _currentToken;
-    }
-
-    public ArrayList Parse()
+    public ArrayList Parse(CompilationContext ctx)
     {
       GetNext();
-      return StatementList();
+      return StatementList(ctx);
     }
 
     // <stmtlist> := { <statement> }+
-    private ArrayList StatementList()
+    private ArrayList StatementList(CompilationContext ctx)
     {
       ArrayList arr = new ArrayList();
-      while (_currentToken != TOKEN.NULL)
+      while (CurrentToken != TOKEN.NULL)
       {
-        Stmt temp = Statement();
+        Stmt temp = Statement(ctx);
         if (temp != null)
         {
           arr.Add(temp);
@@ -45,44 +29,120 @@ namespace SLANG
     }
 
     // <statement> := <printstmt> | <printlinestmt>
-    private Stmt Statement()
+    private Stmt Statement(CompilationContext ctx)
     {
-      Stmt retval = null;
-      switch (_currentToken)
+      Stmt result = null;
+      switch (CurrentToken)
       {
+        case TOKEN.VAR_BOOLEAN:
+        case TOKEN.VAR_NUMBER:
+        case TOKEN.VAR_STRING:
+          result = ParseVariableDeclarationStatement(ctx);
+          GetNext();
+          break;
+        case TOKEN.UNQUOTED_STRING:
+          result = ParseAssignmentStatement(ctx);
+          GetNext();
+          break;
         case TOKEN.PRINT:
-          retval = ParsePrintStatement();
+          result = ParsePrintStatement(ctx);
           GetNext();
           break;
         case TOKEN.PRINTLN:
-          retval = ParsePrintLNStatement();
+          result = ParsePrintLNStatement(ctx);
           GetNext();
           break;
         default:
           throw new Exception("Invalid statement");
       }
-      return retval;
+      return result;
     }
 
+    private Stmt ParseAssignmentStatement(CompilationContext ctx)
+    {
+      string variableName = base._lastString;
+      Symbol s = ctx.TABLE.Get(variableName);
+      if (s == null)
+      {
+        throw new Exception("Variable " + variableName + " is not declared");
+      }
+      GetNext();
+      if (CurrentToken != TOKEN.ASSIGN)
+      {
+        throw new Exception("Invalid assignment statement");
+      }
+      GetNext();
+      Expression expression = Expr(ctx);
+      if (expression.TypeCheck(ctx) != s.Type)
+      {
+        throw new Exception("Type mismatch in assignment");
+      }
+      return new AssignmentStatement(s, expression);
+    }
+
+    private Stmt ParseVariableDeclarationStatement(CompilationContext ctx)
+    {
+      TOKEN token = CurrentToken;
+      GetNext();
+
+      TYPE getTypeOfToken(TOKEN token)
+      {
+        switch (token)
+        {
+          case TOKEN.VAR_BOOLEAN:
+            return TYPE.BOOL;
+          case TOKEN.VAR_NUMBER:
+            return TYPE.NUMERIC;
+          case TOKEN.VAR_STRING:
+            return TYPE.STRING;
+          default:
+            throw new Exception("Invalid type");
+        }
+      }
+
+      if (CurrentToken == TOKEN.UNQUOTED_STRING)
+      {
+        Symbol s = new Symbol();
+        s.Name = base._lastString;
+        s.Type = getTypeOfToken(token);
+        GetNext();
+        if (CurrentToken == TOKEN.SEMI)
+        {
+          ctx.TABLE.Add(s);
+          return new VariableDecalataionStatement(s);
+        }
+        else
+        {
+          throw new Exception("; expected");
+        }
+      }
+      else
+      {
+        throw new Exception("invalid varible declaration");
+      }
+    }
+
+
     //  <printstmt> := print <expr >;
-    private Stmt ParsePrintStatement()
+    private Stmt ParsePrintStatement(CompilationContext ctx)
     {
       GetNext();
-      Expression a = Expr();
+      Expression a = Expr(ctx);
 
-      if (_currentToken != TOKEN.SEMI)
+      if (CurrentToken != TOKEN.SEMI)
       {
         throw new Exception("; is expected");
       }
       return new PrintStatement(a);
     }
+
     //  <printlinestmt> := printline <expr >;
-    private Stmt ParsePrintLNStatement()
+    private Stmt ParsePrintLNStatement(CompilationContext ctx)
     {
       GetNext();
-      Expression a = Expr();
+      Expression a = Expr(ctx);
 
-      if (_currentToken != TOKEN.SEMI)
+      if (CurrentToken != TOKEN.SEMI)
       {
         throw new Exception("; is expected");
       }
@@ -91,89 +151,99 @@ namespace SLANG
 
 
     //<Expr> ::= <Term> | Term { + | - } <Expr>
-    public Expression Expr()
+    public Expression Expr(CompilationContext ctx)
     {
       TOKEN token;
-      Expression returnValue = Term();
-      while (_currentToken == TOKEN.PLUS || _currentToken == TOKEN.MINUS)
+      Expression returnValue = Term(ctx);
+      while (CurrentToken == TOKEN.PLUS || CurrentToken == TOKEN.MINUS)
       {
-        token = _currentToken;
-        _currentToken = GetToken();
-        Expression e1 = Expr();
-        returnValue = new BinaryExpression(returnValue,
-                   token == TOKEN.PLUS ? OPERATOR.PLUS : OPERATOR.MINUS
-                  , e1);
-      }
+        token = CurrentToken;
+        GetNext();
+        Expression e1 = Expr(ctx);
 
+        if (token == TOKEN.PLUS)
+          returnValue = new BinaryPlus(returnValue, e1);
+        else
+          returnValue = new BinaryMinus(returnValue, e1);
+
+      }
       return returnValue;
     }
 
     // <Term> ::= <Factor> | <Factor> {*|/} <Term>
-    public Expression Term()
+    public Expression Term(CompilationContext ctx)
     {
       TOKEN token;
-      Expression returnValue = Factor();
-      while (_currentToken == TOKEN.MULT || _currentToken == TOKEN.DIV)
+      Expression returnValue = Factor(ctx);
+      while (CurrentToken == TOKEN.MULT || CurrentToken == TOKEN.DIV)
       {
-        token = _currentToken;
-        _currentToken = GetToken();
-        Expression e1 = Term();
+        token = CurrentToken;
+        CurrentToken = GetToken();
+        Expression e1 = Term(ctx);
 
-        returnValue = new BinaryExpression(returnValue,
-            token == TOKEN.MULT ? OPERATOR.MULT : OPERATOR.DIV, e1);
+        if (token == TOKEN.MULT)
+          returnValue = new BinaryMult(returnValue, e1);
+        else
+          returnValue = new BinaryDiv(returnValue, e1);
       }
       return returnValue;
     }
 
     // <Factor>::= <number> | ( <expr> ) | {+|-} <factor>
-    public Expression Factor()
+    public Expression Factor(CompilationContext ctx)
     {
       TOKEN token;
       Expression returnValue = null;
       // <number>
-      if (_currentToken == TOKEN.DOUBLE)
+      if (CurrentToken == TOKEN.NUMERIC)
       {
         returnValue = new NumericConstant(GetNumber());
-        _currentToken = GetToken();
+        CurrentToken = GetToken();
+      }
+      else if (CurrentToken == TOKEN.STRING)
+      {
+        returnValue = new StringLiteral(base._lastString);
+        CurrentToken = GetToken();
+      }
+      else if (CurrentToken == TOKEN.BOOLEAN_TRUE || CurrentToken == TOKEN.BOOLEAN_FALSE)
+      {
+        returnValue = new BooleanConstant(CurrentToken == TOKEN.BOOLEAN_TRUE);
+        CurrentToken = GetToken();
       }
       // ( <expr> ) brackets
-      else if (_currentToken == TOKEN.OPAREN)
+      else if (CurrentToken == TOKEN.OPAREN)
       {
-        _currentToken = GetToken();
-        returnValue = Expr();
-        if (_currentToken == TOKEN.CPAREN)
+        CurrentToken = GetToken();
+        returnValue = Expr(ctx);
+        if (CurrentToken == TOKEN.CPAREN)
         {
-          _currentToken = GetToken();
+          CurrentToken = GetToken();
         }
         else
         {
-          throw new Exception("Missing closing parenthesis");
+          throw new Exception("Missing )");
         }
       }
 
       // {+/-} factor
-      else if (_currentToken == TOKEN.OPAREN)
+      else if (CurrentToken == TOKEN.PLUS || CurrentToken == TOKEN.MINUS)
       {
-        _currentToken = GetToken();
-        returnValue = Expr();
-
-        if (_currentToken != TOKEN.CPAREN)
-        {
-          Console.WriteLine("Missing )");
-          throw new Exception();
-        }
-
-        _currentToken = GetToken();
+        token = CurrentToken;
+        CurrentToken = GetToken();
+        returnValue = Factor(ctx);
+        if (token == TOKEN.PLUS)
+          returnValue = new UnaryPlus(returnValue);
+        else
+          returnValue = new UnaryMinus(returnValue);
       }
-
-      else if (_currentToken == TOKEN.PLUS || _currentToken == TOKEN.MINUS)
+      else if (CurrentToken == TOKEN.UNQUOTED_STRING)
       {
-        token = _currentToken;
-        _currentToken = GetToken();
-        returnValue = Factor();
-
-        returnValue = new UnaryExpression(
-             token == TOKEN.PLUS ? OPERATOR.PLUS : OPERATOR.MINUS, returnValue);
+        string str = base._lastString;
+        Symbol s = ctx.TABLE.Get(str);
+        if (s == null)
+          throw new Exception("Undefined Symbol");
+        GetNext();
+        returnValue = new Variable(s);
       }
       else
       {

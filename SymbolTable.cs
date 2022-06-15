@@ -5,19 +5,21 @@ namespace SLANG
   // Varibale data
   public class Symbol
   {
-    public string Name;
-    public TYPE Type;
-    public string StringValue;
-    public double DoubleValue;
-    public bool BooleanValue;
+    public string Name { get; set; }
+    public TYPE Type { get; set; }
+    public string StringValue { get; set; }
+    public double DoubleValue { get; set; }
+    public bool BooleanValue { get; set; }
 
-    public void Dump()
+    public string GetValueAsString()
     {
-      Console.WriteLine("Symbol\nName: " + Name);
-      Console.WriteLine("Type: " + Type);
-      Console.WriteLine("StringValue: " + StringValue);
-      Console.WriteLine("DoubleValue: " + DoubleValue);
-      Console.WriteLine("BooleanValue: " + BooleanValue);
+      switch (Type)
+      {
+        case TYPE.NUMERIC: return DoubleValue.ToString();
+        case TYPE.STRING: return StringValue;
+        case TYPE.BOOL: return BooleanValue.ToString();
+        default: return null;
+      }
     }
   }
 
