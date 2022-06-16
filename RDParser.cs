@@ -6,7 +6,7 @@ namespace SLANG
   public class RDParser : LexicalAnalyzer
   {
     public RDParser(String str) : base(str) { }
-
+    
     public ArrayList Parse(CompilationContext ctx)
     {
       GetNext();
@@ -28,7 +28,7 @@ namespace SLANG
       return arr;
     }
 
-    // <statement> := <printstmt> | <printlinestmt>
+    // <statement> := <printstmt> | <printlinestmt> | <variabledecalstmt> | <assignmentstmt>
     private Stmt Statement(CompilationContext ctx)
     {
       Stmt result = null;
@@ -60,7 +60,7 @@ namespace SLANG
 
     private Stmt ParseAssignmentStatement(CompilationContext ctx)
     {
-      string variableName = base._lastString;
+      string variableName = GetString();
       Symbol s = ctx.TABLE.Get(variableName);
       if (s == null)
       {
@@ -103,13 +103,13 @@ namespace SLANG
       if (CurrentToken == TOKEN.UNQUOTED_STRING)
       {
         Symbol s = new Symbol();
-        s.Name = base._lastString;
+        s.Name = GetString();
         s.Type = getTypeOfToken(token);
         GetNext();
         if (CurrentToken == TOKEN.SEMI)
         {
           ctx.TABLE.Add(s);
-          return new VariableDecalataionStatement(s);
+          return new VariableDeclarationStatement(s);
         }
         else
         {
@@ -118,7 +118,7 @@ namespace SLANG
       }
       else
       {
-        throw new Exception("invalid varible declaration");
+        throw new Exception("invalid variable declaration");
       }
     }
 
@@ -178,18 +178,18 @@ namespace SLANG
       while (CurrentToken == TOKEN.MULT || CurrentToken == TOKEN.DIV)
       {
         token = CurrentToken;
-        CurrentToken = GetToken();
+        GetNext();
         Expression e1 = Term(ctx);
 
         if (token == TOKEN.MULT)
-          returnValue = new BinaryMult(returnValue, e1);
+          returnValue = new BinaryMultiplication(returnValue, e1);
         else
-          returnValue = new BinaryDiv(returnValue, e1);
+          returnValue = new BinaryDivision(returnValue, e1);
       }
       return returnValue;
     }
 
-    // <Factor>::= <number> | ( <expr> ) | {+|-} <factor>
+    // <Factor>::= <number> | ( <expr> ) | {+|-} <factor> | <variable> | TRUE | FALSE
     public Expression Factor(CompilationContext ctx)
     {
       TOKEN token;
@@ -198,22 +198,17 @@ namespace SLANG
       if (CurrentToken == TOKEN.NUMERIC)
       {
         returnValue = new NumericConstant(GetNumber());
-        CurrentToken = GetToken();
+        GetNext();
       }
       else if (CurrentToken == TOKEN.STRING)
       {
-        returnValue = new StringLiteral(base._lastString);
-        CurrentToken = GetToken();
-      }
-      else if (CurrentToken == TOKEN.BOOLEAN_TRUE || CurrentToken == TOKEN.BOOLEAN_FALSE)
-      {
-        returnValue = new BooleanConstant(CurrentToken == TOKEN.BOOLEAN_TRUE);
-        CurrentToken = GetToken();
+        returnValue = new StringLiteral(GetString());
+        GetNext();
       }
       // ( <expr> ) brackets
       else if (CurrentToken == TOKEN.OPAREN)
       {
-        CurrentToken = GetToken();
+        GetNext();
         returnValue = Expr(ctx);
         if (CurrentToken == TOKEN.CPAREN)
         {
@@ -229,21 +224,28 @@ namespace SLANG
       else if (CurrentToken == TOKEN.PLUS || CurrentToken == TOKEN.MINUS)
       {
         token = CurrentToken;
-        CurrentToken = GetToken();
+        GetNext();
         returnValue = Factor(ctx);
         if (token == TOKEN.PLUS)
           returnValue = new UnaryPlus(returnValue);
         else
           returnValue = new UnaryMinus(returnValue);
       }
+      // variable
       else if (CurrentToken == TOKEN.UNQUOTED_STRING)
       {
-        string str = base._lastString;
+        string str = GetString();
         Symbol s = ctx.TABLE.Get(str);
         if (s == null)
           throw new Exception("Undefined Symbol");
         GetNext();
         returnValue = new Variable(s);
+      }
+      // TRUE|FALSE
+      else if (CurrentToken == TOKEN.BOOLEAN_TRUE || CurrentToken == TOKEN.BOOLEAN_FALSE)
+      {
+        returnValue = new BooleanConstant(CurrentToken == TOKEN.BOOLEAN_TRUE);
+        GetNext();
       }
       else
       {

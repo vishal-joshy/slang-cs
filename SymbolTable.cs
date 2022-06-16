@@ -2,7 +2,7 @@ using System.Collections;
 
 namespace SLANG
 {
-  // Varibale data
+  // Variable data
   public class Symbol
   {
     public string Name { get; set; }

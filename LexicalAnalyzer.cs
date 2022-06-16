@@ -2,25 +2,13 @@ using System;
 
 namespace SLANG
 {
-  public struct ValueTable
-  {
-    public TOKEN tok;          // Token id
-    public string Value;       // Token string
-
-    public ValueTable(TOKEN tok, string Value)
-    {
-      this.tok = tok;
-      this.Value = Value;
-    }
-  }
-
   public class LexicalAnalyzer
   {
     private string _expression;
     private int _index;
     private int _length;
     private double _number;
-    private ValueTable[] _keyword;
+    private ValueTable[] _keywords;
     public string _lastString = "";
 
     protected TOKEN CurrentToken;
@@ -32,22 +20,24 @@ namespace SLANG
       _length = _expression.Length;
       _index = 0;
 
-      _keyword = new ValueTable[7];
-      _keyword[0] = new ValueTable(TOKEN.PRINT, "PRINT");
-      _keyword[1] = new ValueTable(TOKEN.PRINTLN, "PRINTLINE");
-      _keyword[2] = new ValueTable(TOKEN.VAR_NUMBER, "NUMERIC");
-      _keyword[3] = new ValueTable(TOKEN.VAR_STRING, "STRING");
-      _keyword[4] = new ValueTable(TOKEN.VAR_BOOLEAN, "BOOLEAN");
-      _keyword[5] = new ValueTable(TOKEN.BOOLEAN_TRUE, "TRUE");
-      _keyword[6] = new ValueTable(TOKEN.BOOLEAN_FALSE, "FALSE");
+      _keywords = new ValueTable[7];
+      _keywords[0] = new ValueTable(TOKEN.PRINT, "PRINT");
+      _keywords[1] = new ValueTable(TOKEN.PRINTLN, "PRINTLINE");
+      _keywords[2] = new ValueTable(TOKEN.VAR_NUMBER, "NUMERIC");
+      _keywords[3] = new ValueTable(TOKEN.VAR_STRING, "STRING");
+      _keywords[4] = new ValueTable(TOKEN.VAR_BOOLEAN, "BOOLEAN");
+      _keywords[5] = new ValueTable(TOKEN.BOOLEAN_TRUE, "TRUE");
+      _keywords[6] = new ValueTable(TOKEN.BOOLEAN_FALSE, "FALSE");
     }
 
-    protected TOKEN GetNext()
+    protected void GetNext()
     {
       LastToken = CurrentToken;
       CurrentToken = GetToken();
-      return LastToken;
     }
+
+    public double GetNumber()=> _number;
+    public string GetString()=> _lastString;
 
     public TOKEN GetToken()
     {
@@ -65,14 +55,15 @@ namespace SLANG
       {
         case '\n':
         case '\r':
-          _index++;
-          goto re_start;
+          _index++; goto re_start;
         case '+':
           token = TOKEN.PLUS;
-          _index++; break;
+          _index++;
+          break;
         case '-':
           token = TOKEN.MINUS;
-          _index++; break;
+          _index++;
+          break;
         case '/':
           token = TOKEN.DIV;
           _index++;
@@ -133,11 +124,11 @@ namespace SLANG
 
               tem = tem.ToUpper();
 
-              for (int i = 0; i < this._keyword.Length; ++i)
+              for (int i = 0; i < this._keywords.Length; ++i)
               {
-                if (_keyword[i].Value.CompareTo(tem) == 0)
+                if (_keywords[i].Value.CompareTo(tem) == 0)
                 {
-                  return _keyword[i].tok;
+                  return _keywords[i].tok;
                 }
               }
 
@@ -164,16 +155,6 @@ namespace SLANG
           }
       }
       return token;
-    }
-
-    public double GetNumber()
-    {
-      return _number;
-    }
-
-    public string GetString()
-    {
-      return _lastString;
     }
   }
 }
