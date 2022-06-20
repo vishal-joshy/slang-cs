@@ -8,16 +8,16 @@ namespace SLANG{
       _expressionString = s;
     }
 
-    public Expression GetExpression(){
-      try{
-        RDParser parser = new RDParser(_expressionString);
-        return parser.CallExpr();
-      }
-      catch(Exception e){
-        Console.WriteLine(e.Message);
-        return null;
-      }
-    }
+    // public Expression GetExpression(){
+    //   try{
+    //     RDParser parser = new RDParser(_expressionString);
+    //     return parser.CallExpr();
+    //   }
+    //   catch(Exception e){
+    //     Console.WriteLine(e.Message);
+    //     return null;
+    //   }
+    // }
 
   }
 }

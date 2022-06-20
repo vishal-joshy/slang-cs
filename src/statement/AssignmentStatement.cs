@@ -18,11 +18,12 @@ namespace SLANG
       _expression = ex;
     }
 
-    public override Symbol Execute(RuntimeContext con)
+    public Variable GetVariable() => _variable;
+    public Expression GetExpression() => _expression;
+
+    public override Symbol accept(Visitor v, RuntimeContext rtx)
     {
-      Symbol result = _expression.Evaluate(con);
-      con.TABLE.Assign(_variable, result);
-      return null;
+      return v.visit(rtx,this);
     }
   }
 }

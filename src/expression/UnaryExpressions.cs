@@ -9,22 +9,12 @@ namespace SLANG
     {
       _exp = e;
     }
-    public override Symbol Evaluate(RuntimeContext cont)
+    public Expression GetExpression() => _exp;
+    public override Symbol accept(RuntimeContext cont, Visitor v)
     {
-      Symbol eval = _exp.Evaluate(cont);
-      if (eval.Type == TYPE.NUMERIC)
-      {
-        Symbol result = new Symbol();
-        result.Type = TYPE.NUMERIC;
-        result.DoubleValue = eval.DoubleValue;
-        result.Name = "";
-        return result;
-      }
-      else
-      {
-        throw new Exception("Invalid type for unary minus");
-      }
+      return v.visit(cont, this);
     }
+
     public override TYPE TypeCheck(CompilationContext cont)
     {
       TYPE eval = _exp.TypeCheck(cont);
@@ -50,23 +40,10 @@ namespace SLANG
     {
       _exp = e;
     }
-
-    public override Symbol Evaluate(RuntimeContext cont)
+    public Expression GetExpression() => _exp;
+    public override Symbol accept(RuntimeContext cont, Visitor v)
     {
-      Symbol eval = _exp.Evaluate(cont);
-
-      if (eval.Type == TYPE.NUMERIC)
-      {
-        Symbol result = new Symbol();
-        result.Type = TYPE.NUMERIC;
-        result.DoubleValue = -eval.DoubleValue;
-        result.Name = "";
-        return result;
-      }
-      else
-      {
-        throw new Exception("Invalid type for unary minus");
-      }
+      return v.visit(cont, this);
     }
 
     public override TYPE TypeCheck(CompilationContext cont)

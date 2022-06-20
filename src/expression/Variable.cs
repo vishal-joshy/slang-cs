@@ -47,18 +47,11 @@ namespace SLANG
       set => _name = value;
     }
 
-    public override Symbol Evaluate(RuntimeContext cont)
+    public override Symbol accept(RuntimeContext cont,Visitor v)
     {
-      if (cont.TABLE == null)
-      {
-        return null;
-      }
-      else
-      {
-        Symbol result = cont.TABLE.Get(_name);
-        return result;
-      }
+      return v.visit(cont,this);
     }
+
 
     public override TYPE TypeCheck(CompilationContext cont)
     {

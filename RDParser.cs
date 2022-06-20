@@ -6,7 +6,7 @@ namespace SLANG
   public class RDParser : LexicalAnalyzer
   {
     public RDParser(String str) : base(str) { }
-    
+
     public ArrayList Parse(CompilationContext ctx)
     {
       GetNext();

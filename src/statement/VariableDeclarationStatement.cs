@@ -4,18 +4,18 @@ namespace SLANG
   public class VariableDeclarationStatement : Stmt
   {
     private Symbol _info;
-    private Variable _var;
+    public Variable Var { get; set; }
 
     public VariableDeclarationStatement(Symbol s)
     {
       _info = s;
     }
 
-    public override Symbol Execute(RuntimeContext con)
+    public Symbol GetInfo() => _info;
+
+    public override Symbol accept(Visitor v, RuntimeContext rtx)
     {
-      con.TABLE.Add(_info);
-      _var = new Variable(_info);
-      return null;
+      return v.visit(rtx,this);
     }
   }
 }

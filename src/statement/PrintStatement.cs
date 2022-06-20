@@ -9,12 +9,12 @@ namespace SLANG
       _expression = ex;
     }
 
-    public override Symbol Execute(RuntimeContext con)
+    public override Symbol accept(Visitor v, RuntimeContext rtx)
     {
-      Symbol result = _expression.Evaluate(con);
-      Console.Write(result.GetValueAsString());
-      return null;
+      return v.visit(rtx,this);
     }
+
+    public Expression GetExpression() => _expression;
   }
 
 
@@ -27,11 +27,11 @@ namespace SLANG
       _expression = ex;
     }
 
-    public override Symbol Execute(RuntimeContext con)
+    public override Symbol accept(Visitor v, RuntimeContext rtx)
     {
-      Symbol result = _expression.Evaluate(con);
-      Console.WriteLine(result.GetValueAsString());
-      return null;
+      return v.visit(rtx, this);
     }
+
+    public Expression GetExpression() => _expression;
   }
 }

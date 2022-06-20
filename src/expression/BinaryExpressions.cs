@@ -11,32 +11,13 @@ namespace SLANG
       _exp2 = e2;
     }
 
-    public override Symbol Evaluate(RuntimeContext cont)
+    public override Symbol accept(RuntimeContext cont,Visitor v)
     {
-      Symbol lEval = _exp1.Evaluate(cont);
-      Symbol rEval = _exp2.Evaluate(cont);
-
-      if (lEval.Type == TYPE.NUMERIC && rEval.Type == TYPE.NUMERIC)
-      {
-        Symbol result = new Symbol();
-        result.Type = TYPE.NUMERIC;
-        result.DoubleValue = lEval.DoubleValue + rEval.DoubleValue;
-        result.Name = "";
-        return result;
-      }
-      else if (lEval.Type == TYPE.STRING && rEval.Type == TYPE.STRING)
-      {
-        Symbol result = new Symbol();
-        result.Type = TYPE.STRING;
-        result.StringValue = lEval.StringValue + rEval.StringValue;
-        result.Name = "";
-        return result;
-      }
-      else
-      {
-        throw new Exception("Invalid types for binary plus");
-      }
+      return v.visit(cont,this);
     }
+
+    public Expression GetLExpression() => _exp1;
+    public Expression GetRExpression() => _exp2;
 
     public override TYPE TypeCheck(CompilationContext cont)
     {
@@ -68,24 +49,12 @@ namespace SLANG
       _exp2 = e2;
     }
 
-    public override Symbol Evaluate(RuntimeContext cont)
+    public override Symbol accept(RuntimeContext cont,Visitor v)
     {
-      Symbol lEval = _exp1.Evaluate(cont);
-      Symbol rEval = _exp2.Evaluate(cont);
-
-      if (lEval.Type == TYPE.NUMERIC && rEval.Type == TYPE.NUMERIC)
-      {
-        Symbol result = new Symbol();
-        result.Type = TYPE.NUMERIC;
-        result.DoubleValue = lEval.DoubleValue - rEval.DoubleValue;
-        result.Name = "";
-        return result;
-      }
-      else
-      {
-        throw new Exception("Invalid types for binary minus");
-      }
+      return v.visit(cont,this);
     }
+    public Expression GetLExpression() => _exp1;
+    public Expression GetRExpression() => _exp2;
 
     public override TYPE TypeCheck(CompilationContext cont)
     {
@@ -117,23 +86,12 @@ namespace SLANG
       _exp2 = e2;
     }
 
-    public override Symbol Evaluate(RuntimeContext cont)
-    {
-      Symbol lEval = _exp1.Evaluate(cont);
-      Symbol rEval = _exp2.Evaluate(cont);
+    public Expression GetLExpression() => _exp1;
+    public Expression GetRExpression() => _exp2;
 
-      if (lEval.Type == TYPE.NUMERIC && rEval.Type == TYPE.NUMERIC)
-      {
-        Symbol result = new Symbol();
-        result.Type = TYPE.NUMERIC;
-        result.DoubleValue = lEval.DoubleValue * rEval.DoubleValue;
-        result.Name = "";
-        return result;
-      }
-      else
-      {
-        throw new Exception("Invalid types for binary minus");
-      }
+    public override Symbol accept(RuntimeContext cont,Visitor v)
+    {
+      return v.visit(cont,this);
     }
 
     public override TYPE TypeCheck(CompilationContext cont)
@@ -166,24 +124,14 @@ namespace SLANG
       _exp2 = e2;
     }
 
-    public override Symbol Evaluate(RuntimeContext cont)
-    {
-      Symbol lEval = _exp1.Evaluate(cont);
-      Symbol rEval = _exp2.Evaluate(cont);
+    public Expression GetLExpression() => _exp1;
+    public Expression GetRExpression() => _exp2;
 
-      if (lEval.Type == TYPE.NUMERIC && rEval.Type == TYPE.NUMERIC)
-      {
-        Symbol result = new Symbol();
-        result.Type = TYPE.NUMERIC;
-        result.DoubleValue = lEval.DoubleValue / rEval.DoubleValue;
-        result.Name = "";
-        return result;
-      }
-      else
-      {
-        throw new Exception("Invalid types for binary minus");
-      }
+    public override Symbol accept(RuntimeContext cont,Visitor v)
+    {
+      return v.visit(cont,this);
     }
+
 
     public override TYPE TypeCheck(CompilationContext cont)
     {

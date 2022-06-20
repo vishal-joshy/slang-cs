@@ -5924,11 +5924,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\user-0\\polygon\\slang\\slang.csproj",
+      "projectUniqueName": "C:\\Users\\user-0\\polygon\\slang-cs\\slang.csproj",
       "projectName": "slang",
-      "projectPath": "C:\\Users\\user-0\\polygon\\slang\\slang.csproj",
+      "projectPath": "C:\\Users\\user-0\\polygon\\slang-cs\\slang.csproj",
       "packagesPath": "C:\\Users\\user-0\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\user-0\\polygon\\slang\\obj\\",
+      "outputPath": "C:\\Users\\user-0\\polygon\\slang-cs\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\user-0\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -5985,7 +5985,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.300\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.301\\RuntimeIdentifierGraph.json"
       }
     }
   }

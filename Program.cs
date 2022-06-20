@@ -33,23 +33,23 @@ namespace slang
       CompilationContext ctx = new CompilationContext();
       RuntimeContext rtx = new RuntimeContext();
       ArrayList stmts = parser.Parse(ctx);
-
+      Interpreter i = new Interpreter();
       Console.WriteLine("result\n-------");
       foreach (Object obj in stmts)
       {
         Stmt s = obj as Stmt;
-        s.Execute(rtx);
+        s.accept(i,rtx);
       }
     }
 
     static void Main(string[] args)
     {
-      if (args.Length == 0)
-      {
-        Console.WriteLine("Usage: dotnet run <filename>");
-        return;
-      }
-      TestFile(args[0]);
+      // if (args.Length == 0)
+      // {
+      //   Console.WriteLine("Usage: dotnet run <filename>");
+      //   return;
+      // }
+      TestFile("test.sl");
       Console.Read();
     }
   }
