@@ -1,3 +1,4 @@
+using System.Reflection.Emit;
 namespace SLANG
 {
   // Boolean constant node , stores true or false value
@@ -19,6 +20,12 @@ namespace SLANG
     }
     public override TYPE TypeCheck(CompilationContext cont) => _symbol.Type;
     public override TYPE Get_Type() => _symbol.Type;
+
+    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    {
+      dtx.CodeOutput.Emit(OpCodes.Ldc_I4, _symbol.BooleanValue ? 1 : 0);
+      return true;
+    }
   }
 
   // Numeric constant node , stores numeric value
@@ -40,6 +47,12 @@ namespace SLANG
     }
     public override TYPE Get_Type() => _symbol.Type;
     public override TYPE TypeCheck(CompilationContext cont) => _symbol.Type;
+
+    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    {
+      dtx.CodeOutput.Emit(OpCodes.Ldc_R8, _symbol.DoubleValue);
+      return true;
+    }
   }
 
   // String Literal node , stores string value
@@ -61,5 +74,11 @@ namespace SLANG
     }
     public override TYPE Get_Type() => _symbol.Type;
     public override TYPE TypeCheck(CompilationContext cont) => _symbol.Type;
+
+    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    {
+      dtx.CodeOutput.Emit(OpCodes.Ldstr, _symbol.StringValue);
+      return true;
+    }
   }
 }

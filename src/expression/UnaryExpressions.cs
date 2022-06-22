@@ -1,3 +1,5 @@
+using System.Reflection.Emit;
+
 namespace SLANG
 {
   // Unary Operations
@@ -13,6 +15,12 @@ namespace SLANG
     public override Symbol accept(RuntimeContext cont, Visitor v)
     {
       return v.visit(cont, this);
+    }
+
+    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    {
+      _exp.Compile(dtx);
+      return true;
     }
 
     public override TYPE TypeCheck(CompilationContext cont)
@@ -44,6 +52,12 @@ namespace SLANG
     public override Symbol accept(RuntimeContext cont, Visitor v)
     {
       return v.visit(cont, this);
+    }
+    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    {
+      _exp.Compile(dtx);
+      dtx.CodeOutput.Emit(OpCodes.Neg);
+      return true;
     }
 
     public override TYPE TypeCheck(CompilationContext cont)

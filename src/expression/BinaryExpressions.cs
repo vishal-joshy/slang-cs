@@ -1,3 +1,5 @@
+using System.Reflection.Emit;
+
 namespace SLANG
 {
   public class BinaryPlus : Expression
@@ -14,6 +16,20 @@ namespace SLANG
     public override Symbol accept(RuntimeContext cont,Visitor v)
     {
       return v.visit(cont,this);
+    }
+
+    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    {
+      _exp1.Compile(dtx);
+      _exp2.Compile(dtx);
+
+      if(_type == TYPE.NUMERIC){
+        dtx.CodeOutput.Emit(OpCodes.Add);
+      }else{
+        Type[] str2 = { typeof(string), typeof(string) };
+        dtx.CodeOutput.Emit(OpCodes.Call, typeof(string).GetMethod("Concat", str2));
+      }
+      return true;
     }
 
     public Expression GetLExpression() => _exp1;
@@ -53,6 +69,15 @@ namespace SLANG
     {
       return v.visit(cont,this);
     }
+
+    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    {
+      _exp1.Compile(dtx);
+      _exp2.Compile(dtx);
+      dtx.CodeOutput.Emit(OpCodes.Sub);
+      return true;
+    }
+
     public Expression GetLExpression() => _exp1;
     public Expression GetRExpression() => _exp2;
 
@@ -94,6 +119,14 @@ namespace SLANG
       return v.visit(cont,this);
     }
 
+    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    {
+      _exp1.Compile(dtx);
+      _exp2.Compile(dtx);
+      dtx.CodeOutput.Emit(OpCodes.Mul);
+      return true;
+    }
+
     public override TYPE TypeCheck(CompilationContext cont)
     {
       TYPE lEval = _exp1.TypeCheck(cont);
@@ -132,6 +165,13 @@ namespace SLANG
       return v.visit(cont,this);
     }
 
+    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    {
+      _exp1.Compile(dtx);
+      _exp2.Compile(dtx);
+      dtx.CodeOutput.Emit(OpCodes.Div);
+      return true;
+    }
 
     public override TYPE TypeCheck(CompilationContext cont)
     {

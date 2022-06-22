@@ -1,3 +1,5 @@
+using System.Reflection.Emit;
+
 namespace SLANG
 {
   // Variable node , stores variable info
@@ -50,6 +52,14 @@ namespace SLANG
     public override Symbol accept(RuntimeContext cont,Visitor v)
     {
       return v.visit(cont,this);
+    }
+
+    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    {
+      Symbol info = dtx.TABLE.Get(_name);
+      LocalBuilder localBuilder = dtx.GetLocalVariables(info.loc_position);
+      dtx.CodeOutput.Emit(OpCodes.Ldloc, localBuilder);
+      return true;
     }
 
 
