@@ -17,5 +17,22 @@ namespace SLANG
     {
       return v.visit(rtx,this);
     }
+
+    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    {
+      System.Type type = null;
+      if(_info.Type == TYPE.NUMERIC){
+        type = typeof(double);
+      }else if(_info.Type == TYPE.STRING){
+        type = typeof(string);
+      }else {
+        type = typeof(bool);
+      }
+      Console.Write(type.ToString());
+      int s = dtx.DeclareLocal(type);
+      _info.loc_position = s;
+      dtx.TABLE.Add(_info);
+      return true;
+    }
   }
 }
