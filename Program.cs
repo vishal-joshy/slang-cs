@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using SLANG;
-using System.Text.Json;
 
 namespace slang
 {
@@ -15,31 +14,24 @@ namespace slang
       return result;
     }
 
-    static void TestFile(string filename)
+    static void RunCode(string code, string mode)
     {
-      string code;
-      try
-      {
-        code = ReadFile(filename);
-      }
-      catch
-      {
-        throw new Exception("Could not read file " + filename);
-      }
-
       Console.WriteLine("code\n-------- \n" + code);
 
       RDParser parser = new RDParser(code);
-      CompilationContext ctx = new CompilationContext();
-      RuntimeContext rtx = new RuntimeContext();
-      ArrayList stmts = parser.Parse(ctx);
-      Interpreter i = new Interpreter();
-      Console.WriteLine("result\n-------");
-      foreach (Object obj in stmts)
+      TModule module = parser.DoParse();
+      if(mode == "i"){
+        RuntimeContext rtx = new RuntimeContext(module);
+        Symbol symbol = module.Execute(rtx);
+      } else if (mode == "c")
       {
-        Stmt s = obj as Stmt;
-        s.accept(i,rtx);
+        if (module.CreateExecutable("test.exe"))
+        {
+          Console.WriteLine("Executable Created");
+          return;
+        }
       }
+
     }
 
     static void Main(string[] args)
@@ -49,7 +41,18 @@ namespace slang
       //   Console.WriteLine("Usage: dotnet run <filename>");
       //   return;
       // }
-      TestFile("test.sl");
+      string code;
+      string filename = "test.sl";
+      try
+      {
+        code = ReadFile(filename);
+      }
+      catch
+      {
+        throw new Exception("Could not read file " + filename);
+      }
+      string mode = args.Length > 0 ? args[0] : "i";
+      RunCode(code, mode);
       Console.Read();
     }
   }

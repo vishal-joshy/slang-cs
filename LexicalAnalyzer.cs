@@ -38,13 +38,27 @@ namespace SLANG
 
     public double GetNumber()=> _number;
     public string GetString()=> _lastString;
+    private double ExtractNumber() {
+      string tempString = "";
+      while (_index < _length && int.TryParse(_expression[_index].ToString(), out int m)){
+        tempString = tempString + Convert.ToString(_expression[_index]);
+        _index++;
+      }
+      return Convert.ToDouble(tempString);
+    }
+
+    private bool CheckIfWhitespace(char c){
+      if(c == ' ' || c == '\t' ||c == '\r' ||c == '\n'){
+        return true;
+      }
+      return false;
+    }
 
     public TOKEN GetToken()
     {
-    re_start:
       TOKEN token = TOKEN.ILLEGAL_TOKEN;
       // white space
-      while (_index < _length && (_expression[_index] == ' ' || _expression[_index] == '\t'))
+      while (_index < _length && CheckIfWhitespace(_expression[_index]))
       {
         _index++;
       }
@@ -53,9 +67,6 @@ namespace SLANG
 
       switch (_expression[_index])
       {
-        case '\n':
-        case '\r':
-          _index++; goto re_start;
         case '+':
           token = TOKEN.PLUS;
           _index++;
@@ -113,39 +124,33 @@ namespace SLANG
           {
             if (char.IsLetter(_expression[_index]))
             {
-              String tem = Convert.ToString(_expression[_index]);
+              String word = Convert.ToString(_expression[_index]);
               _index++;
 
               while (_index < _length && (char.IsLetterOrDigit(_expression[_index]) || _expression[_index] == '_'))
               {
-                tem += _expression[_index];
+                word += _expression[_index];
                 _index++;
               }
 
-              tem = tem.ToUpper();
+              word = word.ToUpper();
 
               for (int i = 0; i < this._keywords.Length; ++i)
               {
-                if (_keywords[i].Value.CompareTo(tem) == 0)
+                if (_keywords[i].Value.CompareTo(word) == 0)
                 {
                   return _keywords[i].tok;
                 }
               }
 
-              this._lastString = tem;
+              this._lastString = word;
               return TOKEN.UNQUOTED_STRING;
 
             }
             else if (int.TryParse(_expression[_index].ToString(), out int n)) //Numerics
             {
-              string tempString = "";
-              while (_index < _length && int.TryParse(_expression[_index].ToString(), out int m)) //loop to get the whole number
-              {
-                tempString = tempString + Convert.ToString(_expression[_index]);
-                _index++;
-              }
+              this._number = ExtractNumber();
               token = TOKEN.NUMERIC;
-              _number = Convert.ToDouble(tempString);
             }
             else
             {
