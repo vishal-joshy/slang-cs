@@ -5,16 +5,33 @@ namespace SLANG
 {
   public class RDParser : LexicalAnalyzer
   {
-    public RDParser(String str) : base(str) { }
+    public TModuleBuilder prog=null;
+    public RDParser(String str) : base(str) {
+      prog = new TModuleBuilder();
+     }
 
-    public ArrayList Parse(CompilationContext ctx)
+    public ArrayList Parse(ProcedureBuilder ctx)
     {
       GetNext();
       return StatementList(ctx);
     }
 
+    public TModule DoParse(){
+      ProcedureBuilder builder = new ProcedureBuilder("MAIN",new CompilationContext());
+      ArrayList statements = Parse(builder);
+
+      foreach (Stmt statement in statements)
+      {
+        builder.AddStatement(statement);
+      }
+
+      Procedure p = builder.GetProcedure();
+      prog.AddProcedure(p);
+      return prog.GetProgram();
+    }
+
     // <stmtlist> := { <statement> }+
-    private ArrayList StatementList(CompilationContext ctx)
+    private ArrayList StatementList(ProcedureBuilder ctx)
     {
       ArrayList arr = new ArrayList();
       while (CurrentToken != TOKEN.NULL)
@@ -29,7 +46,7 @@ namespace SLANG
     }
 
     // <statement> := <printstmt> | <printlinestmt> | <variabledecalstmt> | <assignmentstmt>
-    private Stmt Statement(CompilationContext ctx)
+    private Stmt Statement(ProcedureBuilder ctx)
     {
       Stmt result = null;
       switch (CurrentToken)
@@ -58,7 +75,7 @@ namespace SLANG
       return result;
     }
 
-    private Stmt ParseAssignmentStatement(CompilationContext ctx)
+    private Stmt ParseAssignmentStatement(ProcedureBuilder ctx)
     {
       string variableName = GetString();
       Symbol s = ctx.TABLE.Get(variableName);
@@ -73,19 +90,19 @@ namespace SLANG
       }
       GetNext();
       Expression expression = Expr(ctx);
-      if (expression.TypeCheck(ctx) != s.Type)
+      if (expression.TypeCheck(ctx.Context) != s.Type)
       {
         throw new Exception("Type mismatch in assignment");
       }
       return new AssignmentStatement(s, expression);
     }
 
-    private Stmt ParseVariableDeclarationStatement(CompilationContext ctx)
+    private Stmt ParseVariableDeclarationStatement(ProcedureBuilder ctx)
     {
       TOKEN token = CurrentToken;
       GetNext();
 
-      TYPE getTypeOfToken(TOKEN token)
+      TYPE getTypeOfToken(TOKEN tok)
       {
         switch (token)
         {
@@ -124,11 +141,11 @@ namespace SLANG
 
 
     //  <printstmt> := print <expr >;
-    private Stmt ParsePrintStatement(CompilationContext ctx)
+    private Stmt ParsePrintStatement(ProcedureBuilder ctx)
     {
       GetNext();
       Expression a = Expr(ctx);
-
+      a.TypeCheck(ctx.Context);
       if (CurrentToken != TOKEN.SEMI)
       {
         throw new Exception("; is expected");
@@ -137,11 +154,11 @@ namespace SLANG
     }
 
     //  <printlinestmt> := printline <expr >;
-    private Stmt ParsePrintLNStatement(CompilationContext ctx)
+    private Stmt ParsePrintLNStatement(ProcedureBuilder ctx)
     {
       GetNext();
       Expression a = Expr(ctx);
-
+      a.TypeCheck(ctx.Context);
       if (CurrentToken != TOKEN.SEMI)
       {
         throw new Exception("; is expected");
@@ -151,7 +168,7 @@ namespace SLANG
 
 
     //<Expr> ::= <Term> | Term { + | - } <Expr>
-    public Expression Expr(CompilationContext ctx)
+    public Expression Expr(ProcedureBuilder ctx)
     {
       TOKEN token;
       Expression returnValue = Term(ctx);
@@ -171,7 +188,7 @@ namespace SLANG
     }
 
     // <Term> ::= <Factor> | <Factor> {*|/} <Term>
-    public Expression Term(CompilationContext ctx)
+    public Expression Term(ProcedureBuilder ctx)
     {
       TOKEN token;
       Expression returnValue = Factor(ctx);
@@ -190,7 +207,7 @@ namespace SLANG
     }
 
     // <Factor>::= <number> | ( <expr> ) | {+|-} <factor> | <variable> | TRUE | FALSE
-    public Expression Factor(CompilationContext ctx)
+    public Expression Factor(ProcedureBuilder ctx)
     {
       TOKEN token;
       Expression returnValue = null;
