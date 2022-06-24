@@ -20,7 +20,7 @@ namespace SLANG
       _length = _expression.Length;
       _index = 0;
 
-      _keywords = new ValueTable[7];
+      _keywords = new ValueTable[13];
       _keywords[0] = new ValueTable(TOKEN.PRINT, "PRINT");
       _keywords[1] = new ValueTable(TOKEN.PRINTLN, "PRINTLINE");
       _keywords[2] = new ValueTable(TOKEN.VAR_NUMBER, "NUMERIC");
@@ -28,6 +28,12 @@ namespace SLANG
       _keywords[4] = new ValueTable(TOKEN.VAR_BOOLEAN, "BOOLEAN");
       _keywords[5] = new ValueTable(TOKEN.BOOLEAN_TRUE, "TRUE");
       _keywords[6] = new ValueTable(TOKEN.BOOLEAN_FALSE, "FALSE");
+      _keywords[7] = new ValueTable(TOKEN.IF, "IF");
+      _keywords[8] = new ValueTable(TOKEN.ELSE, "ELSE");
+      _keywords[9] = new ValueTable(TOKEN.ENDIF, "ENDIF");
+      _keywords[10] = new ValueTable(TOKEN.WHILE, "WHILE");
+      _keywords[11] = new ValueTable(TOKEN.WEND, "WEND");
+      _keywords[12] = new ValueTable(TOKEN.THEN, "THEN");
     }
 
     protected void GetNext()
@@ -91,12 +97,60 @@ namespace SLANG
           token = TOKEN.CPAREN;
           _index++;
           break;
+        case '!':
+          if(_expression[_index+1] == '='){
+            token = TOKEN.NOTEQUALITY;
+            _index = _index + 2;
+            break;
+          }else{
+            token = TOKEN.NOT;
+            _index++;
+            break;
+          }
+        case '>':
+          if(_expression[_index+1] == '='){
+            token = TOKEN.GREATER_THAN_OR_EQUALITY;
+            _index = _index + 2;
+            break;
+          }else{
+            token = TOKEN.GREATER_THAN;
+            _index++;
+            break;
+          }
+        case '<':
+          if(_expression[_index+1] == '='){
+            token = TOKEN.LESS_THAN_OR_EQUALITY;
+            _index = _index + 2;
+            break;
+          }else{
+            token = TOKEN.LESS_THAN;
+            _index++;
+            break;
+          }
+        case '=':
+          if(_expression[_index+1] == '='){
+            token = TOKEN.EQUALITY;
+            _index = _index + 2;
+            break;
+          }else{
+            token = TOKEN.ASSIGN;
+            _index++;
+            break;
+          }
+        case '&':
+          if(_expression[_index+1] == '&'){
+            token = TOKEN.AND;
+            _index = _index + 2;
+          }
+          break;
+        case '|':
+          if(_expression[_index+1] == '|'){
+            token = TOKEN.OR;
+            _index = _index + 2;
+          }
+          break;
         case ';':
           token = TOKEN.SEMI;
-          _index++;
-          break;
-        case '=':
-          token = TOKEN.ASSIGN;
           _index++;
           break;
         case '"':
