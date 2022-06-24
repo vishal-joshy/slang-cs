@@ -13,7 +13,7 @@ namespace SLANG
 
     public Symbol GetInfo() => _info;
 
-    public override Symbol accept(Visitor v, RuntimeContext rtx)
+    public override Symbol accept(RuntimeContext rtx, Visitor v)
     {
       return v.visit(rtx,this);
     }

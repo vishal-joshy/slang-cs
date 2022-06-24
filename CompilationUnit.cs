@@ -101,7 +101,7 @@ namespace SLANG
     {
       Interpreter i = new Interpreter();
       foreach(Stmt s in Statements){
-        s.accept(i, rtx);
+        s.accept(rtx,i);
       }
       return null;
     }

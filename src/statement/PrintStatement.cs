@@ -10,7 +10,7 @@ namespace SLANG
       _expression = ex;
     }
 
-    public override Symbol accept(Visitor v, RuntimeContext rtx)
+    public override Symbol accept(RuntimeContext rtx,Visitor v)
     {
       return v.visit(rtx,this);
     }
@@ -50,7 +50,7 @@ namespace SLANG
       _expression = ex;
     }
 
-    public override Symbol accept(Visitor v, RuntimeContext rtx)
+    public override Symbol accept(RuntimeContext rtx,Visitor v)
     {
       return v.visit(rtx, this);
     }

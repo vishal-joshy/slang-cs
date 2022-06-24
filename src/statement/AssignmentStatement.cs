@@ -23,7 +23,7 @@ namespace SLANG
     public Variable GetVariable() => _variable;
     public Expression GetExpression() => _expression;
 
-    public override Symbol accept(Visitor v, RuntimeContext rtx)
+    public override Symbol accept(RuntimeContext rtx,Visitor v)
     {
       return v.visit(rtx,this);
     }
