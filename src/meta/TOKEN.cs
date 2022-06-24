@@ -32,6 +32,25 @@ namespace SLANG
     BOOLEAN_FALSE,
     STRING,
 
+    //Relational
+    EQUALITY,
+    GREATER_THAN,
+    LESS_THAN,
+    GREATER_THAN_OR_EQUALITY,
+    LESS_THAN_OR_EQUALITY,
+    AND,
+    OR,
+    NOT,
+    NOTEQUALITY,
+
+
+    //Control
+    IF,
+    WHILE,
+    ELSE,
+    THEN,
+    ENDIF,
+    WEND,
 
   }
 }

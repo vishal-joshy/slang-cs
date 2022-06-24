@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace SLANG
 {
   public interface Visitor
@@ -16,7 +18,12 @@ namespace SLANG
     Symbol visit(RuntimeContext rtx, UnaryPlus up);
     Symbol visit(RuntimeContext rtx, UnaryMinus um);
     Symbol visit(RuntimeContext rtx, Variable v);
-  }
+    Symbol visit(RuntimeContext rtx, RelationalExpression r);
+    Symbol visit(RuntimeContext rtx, LogicalExpression l);
+    Symbol visit(RuntimeContext rtx, LogicalNot ln);
+    Symbol visit(RuntimeContext rtx, IfStatement ifs);
+    Symbol visit(RuntimeContext rtx, WhileStatment ws);
+    }
 
   public class Interpreter : Visitor
   {
@@ -193,6 +200,136 @@ namespace SLANG
       {
         throw new Exception("Invalid type for unary minus");
       }
+    }
+
+    public Symbol visit(RuntimeContext rtx, RelationalExpression r){
+      Symbol lEval= r.GetLExpression().accept(rtx, this);
+      Symbol rEval = r.GetRExpression().accept(rtx, this);
+      RELATIONAL_OPERATOR op = r.GetOperator();
+      Symbol result = new Symbol();
+      result.Name = "";
+      result.Type = TYPE.BOOL;
+
+      if(lEval.Type != rEval.Type){
+        throw new Exception("Invalid types for relational operations");
+      }
+
+      if(lEval.Type == TYPE.NUMERIC){
+        if(op == RELATIONAL_OPERATOR.EQUALITY)
+          result.BooleanValue = lEval.DoubleValue == rEval.DoubleValue;
+        else if(op == RELATIONAL_OPERATOR.NOTEQUALITY)
+          result.BooleanValue = lEval.DoubleValue != rEval.DoubleValue;
+        else if(op == RELATIONAL_OPERATOR.GREATER_THAN)
+          result.BooleanValue = lEval.DoubleValue > rEval.DoubleValue;
+        else if(op == RELATIONAL_OPERATOR.LESS_THAN)
+          result.BooleanValue = lEval.DoubleValue < rEval.DoubleValue;
+        else if(op == RELATIONAL_OPERATOR.GREATER_THAN_OR_EQUALITY)
+          result.BooleanValue = lEval.DoubleValue >= rEval.DoubleValue;
+        else if(op == RELATIONAL_OPERATOR.LESS_THAN_OR_EQUALITY)
+          result.BooleanValue = lEval.DoubleValue <= rEval.DoubleValue;
+        else
+          throw new Exception("Invalid Relational Operator");
+
+        return result;
+
+      } else if (lEval.Type == TYPE.STRING){
+        if(op == RELATIONAL_OPERATOR.EQUALITY)
+          result.BooleanValue = String.Compare(lEval.StringValue, rEval.StringValue)==0;
+        else if(op == RELATIONAL_OPERATOR.NOTEQUALITY)
+          result.BooleanValue = String.Compare(lEval.StringValue, rEval.StringValue)!=0;
+        else
+          result.BooleanValue = false;
+        return result;
+
+      } else if (lEval.Type == TYPE.BOOL){
+        if(op == RELATIONAL_OPERATOR.EQUALITY)
+          result.BooleanValue = lEval.BooleanValue == rEval.BooleanValue;
+        else if(op == RELATIONAL_OPERATOR.NOTEQUALITY)
+          result.BooleanValue = lEval.BooleanValue != rEval.BooleanValue;
+        else
+          result.BooleanValue = false;
+        return result;
+      }
+      return null;
+    }
+
+    public Symbol visit(RuntimeContext rtx, LogicalExpression l){
+      Symbol lEval = l.GetLExpression().accept(rtx, this);
+      Symbol rEval = l.GetRExpression().accept(rtx, this);
+      TOKEN op = l.GetOperator();
+
+      if(lEval.Type == TYPE.BOOL && rEval.Type == TYPE.BOOL){
+        Symbol result = new Symbol();
+        result.Name = "";
+        result.Type = TYPE.BOOL;
+        if(op ==TOKEN.AND)
+          result.BooleanValue = lEval.BooleanValue && rEval.BooleanValue;
+        else if(op == TOKEN.OR)
+          result.BooleanValue = lEval.BooleanValue || rEval.BooleanValue;
+        else
+          return null;
+
+        return result;
+      }
+      return null;
+    }
+
+    public Symbol visit(RuntimeContext rtx,LogicalNot ln){
+      Symbol eval = ln.GetExpression().accept(rtx, this);
+
+      if(eval.Type == TYPE.BOOL){
+        Symbol result = new Symbol();
+        result.Type = TYPE.BOOL;
+        result.Name = "";
+        result.BooleanValue = !eval.BooleanValue;
+        return result;
+      } else {
+        return null;
+      }
+    }
+
+    public Symbol visit(RuntimeContext rtx, IfStatement ifs){
+      Symbol eval = ifs.GetCondition().accept(rtx, this);
+      if(eval.Type != TYPE.BOOL){
+        throw new Exception("Condition evaluation failed");
+      }
+
+      if(eval.BooleanValue == true){
+        ArrayList statements = ifs.GetStatements("trueStatements");
+        foreach(Stmt s in statements){
+          s.accept(rtx, this);
+        }
+      } else {
+        ArrayList statements = ifs.GetStatements("falseStatements");
+        if(statements != null){
+          foreach(Stmt s in statements){
+            s.accept(rtx, this);
+          }
+        }
+      }
+      return null;
+    }
+
+    public Symbol visit( RuntimeContext rtx, WhileStatment ws ) {
+    Wloop:
+      Symbol condition = ws.GetCondition().accept(rtx, this);
+      ArrayList statements = ws.GetStatements();
+      if (condition == null || condition.Type != TYPE.BOOL) {
+        throw new Exception("Condition evaluation error");
+      }
+      if (condition.BooleanValue != true)
+        return null;
+
+      if (condition.BooleanValue == true) {
+        Symbol tsp = null;
+        foreach (Stmt s in statements) {
+          tsp = s.accept(rtx, this);
+          if(tsp != null){
+            return tsp;
+          }
+        }
+      }
+      goto Wloop;
     }
   }
 }
