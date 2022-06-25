@@ -23,7 +23,8 @@ namespace SLANG
     Symbol visit(RuntimeContext rtx, LogicalNot ln);
     Symbol visit(RuntimeContext rtx, IfStatement ifs);
     Symbol visit(RuntimeContext rtx, WhileStatment ws);
-    }
+    Symbol visit(RuntimeContext rtx, ReturnStatement rs);
+  }
 
   public class Interpreter : Visitor
   {
@@ -330,6 +331,12 @@ namespace SLANG
         }
       }
       goto Wloop;
+    }
+
+    public Symbol visit(RuntimeContext rtx, ReturnStatement rs){
+      Expression exp = rs.GetExpression();
+      rs.inf = exp == null ? null : exp.accept(rtx, this);
+      return rs.inf;
     }
   }
 }
