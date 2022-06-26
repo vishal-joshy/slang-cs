@@ -20,7 +20,7 @@ namespace SLANG
       _length = _expression.Length;
       _index = 0;
 
-      _keywords = new ValueTable[13];
+      _keywords = new ValueTable[16];
       _keywords[0] = new ValueTable(TOKEN.PRINT, "PRINT");
       _keywords[1] = new ValueTable(TOKEN.PRINTLN, "PRINTLINE");
       _keywords[2] = new ValueTable(TOKEN.VAR_NUMBER, "NUMERIC");
@@ -34,6 +34,9 @@ namespace SLANG
       _keywords[10] = new ValueTable(TOKEN.WHILE, "WHILE");
       _keywords[11] = new ValueTable(TOKEN.WEND, "WEND");
       _keywords[12] = new ValueTable(TOKEN.THEN, "THEN");
+      _keywords[13] = new ValueTable(TOKEN.END, "END");
+      _keywords[14]= new ValueTable(TOKEN.FUNCTION, "FUNCTION");
+      _keywords[15] = new ValueTable(TOKEN.RETURN, "RETURN");
     }
 
     protected void GetNext()
@@ -73,6 +76,10 @@ namespace SLANG
 
       switch (_expression[_index])
       {
+        case ',':
+          token = TOKEN.COMMA;
+          _index++;
+          break;
         case '+':
           token = TOKEN.PLUS;
           _index++;

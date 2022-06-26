@@ -51,6 +51,9 @@ namespace SLANG
     THEN,
     ENDIF,
     WEND,
-
+    COMMA,
+    RETURN,
+    END,
+    FUNCTION
   }
 }
