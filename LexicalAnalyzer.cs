@@ -1,9 +1,7 @@
 using System;
 
-namespace SLANG
-{
-  public class LexicalAnalyzer
-  {
+namespace SLANG {
+  public class LexicalAnalyzer {
     private string _expression;
     private int _index;
     private int _length;
@@ -14,8 +12,7 @@ namespace SLANG
     protected TOKEN CurrentToken;
     protected TOKEN LastToken;
 
-    public LexicalAnalyzer(string s)
-    {
+    public LexicalAnalyzer(string s) {
       _expression = s;
       _length = _expression.Length;
       _index = 0;
@@ -35,171 +32,90 @@ namespace SLANG
       _keywords[11] = new ValueTable(TOKEN.WEND, "WEND");
       _keywords[12] = new ValueTable(TOKEN.THEN, "THEN");
       _keywords[13] = new ValueTable(TOKEN.END, "END");
-      _keywords[14]= new ValueTable(TOKEN.FUNCTION, "FUNCTION");
+      _keywords[14] = new ValueTable(TOKEN.FUNCTION, "FUNCTION");
       _keywords[15] = new ValueTable(TOKEN.RETURN, "RETURN");
     }
 
-    protected void GetNext()
-    {
+    protected void GetNext() {
       LastToken = CurrentToken;
       CurrentToken = GetToken();
     }
 
-    public double GetNumber()=> _number;
-    public string GetString()=> _lastString;
-    private double ExtractNumber() {
-      string tempString = "";
-      while (_index < _length && int.TryParse(_expression[_index].ToString(), out int m)){
-        tempString = tempString + Convert.ToString(_expression[_index]);
-        _index++;
-      }
-      return Convert.ToDouble(tempString);
-    }
+    public double GetNumber() => _number;
+    public string GetString() => _lastString;
 
-    private bool CheckIfWhitespace(char c){
-      if(c == ' ' || c == '\t' ||c == '\r' ||c == '\n'){
-        return true;
-      }
-      return false;
-    }
-
-    public TOKEN GetToken()
-    {
-      TOKEN token = TOKEN.ILLEGAL_TOKEN;
-      // white space
-      while (_index < _length && CheckIfWhitespace(_expression[_index]))
-      {
+    public TOKEN GetToken() {
+      //Skip whitespace
+      while (_index < _length && IsWhitespace(_expression[_index])) {
         _index++;
       }
 
       if (_index == _length) return TOKEN.NULL; //EOL
 
-      switch (_expression[_index])
-      {
-        case ',':
-          token = TOKEN.COMMA;
-          _index++;
-          break;
-        case '+':
-          token = TOKEN.PLUS;
-          _index++;
-          break;
-        case '-':
-          token = TOKEN.MINUS;
-          _index++;
-          break;
-        case '/':
-          token = TOKEN.DIV;
-          _index++;
-          break;
-        case '*':
-          token = TOKEN.MULT;
-          _index++;
-          break;
-        case '(':
-          token = TOKEN.OPAREN;
-          _index++;
-          break;
-        case ')':
-          token = TOKEN.CPAREN;
-          _index++;
-          break;
+      switch (_expression[_index]) {
+        case ',': _index++; return TOKEN.COMMA;
+        case '+': _index++; return TOKEN.PLUS;
+        case '-': _index++; return TOKEN.MINUS;
+        case '/': _index++; return TOKEN.DIV;
+        case '*': _index++; return TOKEN.MULT;
+        case '(': _index++; return TOKEN.OPAREN;
+        case ')': _index++; return TOKEN.CPAREN;
+        case ';': _index++; return TOKEN.SEMI;
         case '!':
-          if(_expression[_index+1] == '='){
-            token = TOKEN.NOTEQUALITY;
+          if (_expression[_index + 1] == '=') {
             _index = _index + 2;
-            break;
-          }else{
-            token = TOKEN.NOT;
+            return TOKEN.NOTEQUALITY;
+          } else {
             _index++;
-            break;
+            return TOKEN.NOT;
           }
         case '>':
-          if(_expression[_index+1] == '='){
-            token = TOKEN.GREATER_THAN_OR_EQUALITY;
+          if (_expression[_index + 1] == '=') {
             _index = _index + 2;
-            break;
-          }else{
-            token = TOKEN.GREATER_THAN;
+            return TOKEN.GREATER_THAN_OR_EQUALITY;
+          } else {
             _index++;
-            break;
+            return TOKEN.GREATER_THAN;
           }
         case '<':
-          if(_expression[_index+1] == '='){
-            token = TOKEN.LESS_THAN_OR_EQUALITY;
+          if (_expression[_index + 1] == '=') {
             _index = _index + 2;
-            break;
-          }else{
-            token = TOKEN.LESS_THAN;
+            return TOKEN.LESS_THAN_OR_EQUALITY;
+          } else {
             _index++;
-            break;
+            return TOKEN.LESS_THAN;
           }
         case '=':
-          if(_expression[_index+1] == '='){
-            token = TOKEN.EQUALITY;
+          if (_expression[_index + 1] == '=') {
             _index = _index + 2;
-            break;
-          }else{
-            token = TOKEN.ASSIGN;
+            return TOKEN.EQUALITY;
+          } else {
             _index++;
-            break;
+            return TOKEN.ASSIGN;
           }
         case '&':
-          if(_expression[_index+1] == '&'){
-            token = TOKEN.AND;
+          if (_expression[_index + 1] == '&') {
             _index = _index + 2;
+            return TOKEN.AND;
+          } else {
+            throw new Exception("& missing for AND");
           }
-          break;
         case '|':
-          if(_expression[_index+1] == '|'){
-            token = TOKEN.OR;
+          if (_expression[_index + 1] == '|') {
             _index = _index + 2;
+            return TOKEN.OR;
+          } else {
+            throw new Exception("| missing for OR");
           }
-          break;
-        case ';':
-          token = TOKEN.SEMI;
-          _index++;
-          break;
         case '"':
-          string temp = "";
-          _index++;
-          while (_index < _length && _expression[_index] != '"')
-          {
-            temp += _expression[_index];
-            _index++;
-          }
-          if (_index == _length)
-          {
-            token = TOKEN.ILLEGAL_TOKEN;
-            return token;
-          }
-          else
-          {
-            _index++;
-            _lastString = temp;
-            token = TOKEN.STRING;
-            return token;
-          }
-
-        default:
-          {
-            if (char.IsLetter(_expression[_index]))
-            {
-              String word = Convert.ToString(_expression[_index]);
-              _index++;
-
-              while (_index < _length && (char.IsLetterOrDigit(_expression[_index]) || _expression[_index] == '_'))
-              {
-                word += _expression[_index];
-                _index++;
-              }
-
-              word = word.ToUpper();
-
-              for (int i = 0; i < this._keywords.Length; ++i)
-              {
-                if (_keywords[i].Value.CompareTo(word) == 0)
-                {
+          this._lastString = ExtractQuotedString();
+          return TOKEN.STRING;
+        default: {
+            if (char.IsLetter(_expression[_index])) {
+              string word = ExtractUnquotedString();
+              //check if word is a keyword
+              for (int i = 0; i < this._keywords.Length; ++i) {
+                if (_keywords[i].Value.CompareTo(word) == 0) {
                   return _keywords[i].tok;
                 }
               }
@@ -207,20 +123,55 @@ namespace SLANG
               this._lastString = word;
               return TOKEN.UNQUOTED_STRING;
 
-            }
-            else if (int.TryParse(_expression[_index].ToString(), out int n)) //Numerics
-            {
+            } else if (int.TryParse(_expression[_index].ToString(), out int n)) {
               this._number = ExtractNumber();
-              token = TOKEN.NUMERIC;
-            }
-            else
-            {
+              return TOKEN.NUMERIC;
+            } else {
               throw new Exception("Illegal token");
             }
-            break;
           }
       }
-      return token;
+    }
+
+    private string ExtractUnquotedString() {
+      string result = Convert.ToString(_expression[_index]);
+      _index++;
+      while (_index < _length && (char.IsLetterOrDigit(_expression[_index]) || _expression[_index] == '_')) {
+        result += _expression[_index];
+        _index++;
+      }
+      return result.ToUpper();
+    }
+
+    private double ExtractNumber() {
+      string tempString = "";
+      while (_index < _length && int.TryParse(_expression[_index].ToString(), out int m)) {
+        tempString = tempString + Convert.ToString(_expression[_index]);
+        _index++;
+      }
+      return Convert.ToDouble(tempString);
+    }
+
+    private bool IsWhitespace(char c) {
+      if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+        return true;
+      }
+      return false;
+    }
+
+    private string ExtractQuotedString() {
+      string result = "";
+      _index++;
+      while (_index < _length && _expression[_index] != '"') {
+        result += _expression[_index];
+        _index++;
+      }
+      if (_index == _length) {
+        throw new Exception("Illegal Token" + _expression[_index]);
+      } else {
+        _index++;
+        return result;
+      }
     }
   }
 }
