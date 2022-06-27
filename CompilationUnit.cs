@@ -5,13 +5,13 @@ namespace SLANG
 {
   public abstract class CompilationUnit
   {
-    public abstract Symbol Execute(RuntimeContext rtx);
+    public abstract Symbol Execute(RuntimeContext rtx, ArrayList actuals);
     public abstract bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx);
   }
 
   public abstract class PROC
   {
-    public abstract Symbol Execute(RuntimeContext rtx);
+    public abstract Symbol Execute(RuntimeContext rtx, ArrayList actuals);
     public abstract bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx);
   }
 
@@ -46,12 +46,12 @@ namespace SLANG
       return true;
     }
 
-    public override Symbol Execute(RuntimeContext rtx)
+    public override Symbol Execute(RuntimeContext rtx, ArrayList actuals)
     {
-      Procedure procedure = FindProcedure("Main");
+      Procedure procedure = FindProcedure("MAIN");
       if (procedure != null)
       {
-        return procedure.Execute(rtx);
+        return procedure.Execute(rtx,actuals);
       }
       return null;
     }
@@ -97,11 +97,31 @@ namespace SLANG
       Type = returnType;
     }
 
-    public override Symbol Execute(RuntimeContext rtx)
+    public TYPE TypeCheck(CompilationContext cont){
+      return TYPE.NUMERIC;
+    }
+
+    public override Symbol Execute(RuntimeContext rtx, ArrayList actuals)
     {
+      ArrayList vars = new ArrayList();
+      int j = 0;
+
+      if(Formals != null && actuals !=null){
+        j = 0;
+        foreach(Symbol s in Formals){
+          Symbol inf = actuals[j] as Symbol;
+          inf.Name = s.Name;
+          rtx.TABLE.Add(inf);
+          j++;
+        }
+      }
+
       Interpreter i = new Interpreter();
       foreach(Stmt s in Statements){
         s.accept(rtx,i);
+        if(ReturnValue != null){
+          return ReturnValue;
+        }
       }
       return null;
     }
@@ -114,9 +134,5 @@ namespace SLANG
       dtx.CodeOutput.Emit(OpCodes.Ret);
       return true;
     }
-
   }
-
-
-
 }
