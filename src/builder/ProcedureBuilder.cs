@@ -1,72 +1,93 @@
 using System.Collections;
 
-namespace SLANG{
-  public class ProcedureBuilder : AbstractBuilder{
-    private string _procedureName = "";
-    private CompilationContext _ctx = null;
-    private ArrayList _formals = null;
-    private ArrayList _statements = new ArrayList();
-    private TYPE _info = TYPE.ILLEGAL;
+namespace SLANG
+{
+      public class ProcedureBuilder
+    {
+        private string _procedureName = "";
+        private COMPILATION_CONTEXT _ctx = null;
+        private ArrayList _formals = new ArrayList();
+        private ArrayList _statements = new ArrayList();
+        private TYPE_INFO _type = TYPE_INFO.ILLEGAL;
 
-    public ProcedureBuilder(string name, CompilationContext ctx){
-      _procedureName = name;
-      _ctx = ctx;
-    }
+        public ProcedureBuilder(string name, COMPILATION_CONTEXT cont)
+        {
+            _ctx = cont;
+            _procedureName = name;
+        }
 
-    public bool AddLocal(Symbol s){
-      _ctx.TABLE.Add(s);
-      return true;
-    }
+        public bool AddLocal(SYMBOL info)
+        {
+            _ctx.TABLE.Add(info);
+            return true;
+        }
 
-    public TYPE TypeCheck(Expression e){
-      return e.TypeCheck(_ctx);
-    }
+        public bool AddFormals(SYMBOL info)
+        {
+            _formals.Add(info);
+            return true;
+        }
 
-    public void AddStatement(Stmt statement){
-      _statements.Add(statement);
-    }
+        public TYPE_INFO TypeCheck(Expression e)
+        {
+            return e.TypeCheck(_ctx);
+        }
 
-    public Symbol GetSymbol(string name){
-      return _ctx.TABLE.Get(name);
-    }
+        public void AddStatement(Statement st)
+        {
+            _statements.Add(st);
+        }
 
-    public bool CheckPrototype(string name){
-      return true;
-    }
+        public SYMBOL GetSymbol(string strname)
+        {
+            return _ctx.TABLE.Get(strname);
+        }
 
-    public TYPE TYPE{
-      get{
-        return _info;
-      }
-      set{
-        _info = value;
-      }
-    }
+        public TYPE_INFO TYPE
+        {
+            get
+            {
+                return _type;
+            }
+            set
+            {
+                _type = value;
+            }
+        }
 
-    public SymbolTable TABLE{
-      get{
-        return _ctx.TABLE;
-      }
-    }
+        public SymbolTable TABLE
+        {
+            get
+            {
+                return _ctx.TABLE;
+            }
+        }
 
-    public CompilationContext Context{
-      get{
-        return _ctx;
-      }
-    }
+        public COMPILATION_CONTEXT Context
+        {
+            get
+            {
+                return _ctx;
+            }
+        }
 
-    public string Name{
-      get{
-        return _procedureName;
-      }
-      set{
-        _procedureName = value;
-      }
-    }
+        public string Name
+        {
+            get
+            {
+                return _procedureName;
+            }
 
-    public Procedure GetProcedure(){
-      Procedure ret = new Procedure(_procedureName, _statements, _ctx.TABLE, _info);
-      return ret;
+            set
+            {
+                _procedureName = value;
+            }
+        }
+
+        public Procedure GetProcedure()
+        {
+            Procedure ret = new Procedure(_procedureName, _formals, _statements, _ctx.TABLE, _type);
+            return ret;
+        }
     }
-  }
 }

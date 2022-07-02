@@ -1,31 +1,59 @@
-using System.Collections;
+﻿using System.Collections;
 
-namespace SLANG{
-  public class TModuleBuilder:AbstractBuilder{
-    private ArrayList _procedures;
-    private ArrayList _prototypes = null;
+namespace SLANG
+{
+    class TModuleBuilder
+    {
+        private ArrayList procedures;
+        private ArrayList prototypes = null;
 
-    public TModuleBuilder(){
-      _procedures = new ArrayList();
-      _prototypes = null;
-    }
-
-    public bool AddProcedure (Procedure p ){
-      _procedures.Add(p);
-      return true;
-    }
-
-    public TModule GetProgram(){
-      return new TModule(_procedures);
-    }
-
-    public Procedure GetProcedure(string procedureName){
-      foreach(Procedure p in _procedures){
-        if(p.Name.Equals(procedureName)){
-          return p;
+        public TModuleBuilder()
+        {
+            procedures = new ArrayList();
+            prototypes = new ArrayList();
         }
-      }
-      return null;
+
+        public bool IsFunction(string name)
+        {
+            foreach (FUNCTION_INFO fInfo in prototypes)
+            {
+                if (fInfo.Name.Equals(name))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void AddFunctionProtoType(string name, TYPE_INFO retType, ArrayList typeInfos)
+        {
+            FUNCTION_INFO fn = new FUNCTION_INFO(name, retType, typeInfos);
+            prototypes.Add(fn);
+        }
+
+        public bool Add(Procedure p)
+        {
+            procedures.Add(p);
+            return true;
+        }
+
+
+        public TModule GetProgram()
+        {
+            return new TModule(procedures);
+        }
+
+
+        public Procedure GetProc(string name)
+        {
+            foreach (Procedure p in procedures)
+            {
+                if (p.Name.Equals(name))
+                {
+                    return p;
+                }
+            }
+            return null;
+        }
     }
-  }
 }
