@@ -13,7 +13,7 @@
 
         static void RunCode(string code, string mode)
         {
-            Console.WriteLine("code\n-------- \n" + code);
+            Console.WriteLine("Parsing... \n" + code);
 
             RDParser parser = new RDParser(code);
             TModule module = parser.DoParse();
@@ -21,7 +21,7 @@
             {
                 throw new Exception("Prase failed");
             }
-            Console.WriteLine("Result -----");
+            Console.WriteLine("Parsing done.");
             if (mode == "i")
             {
                 RUNTIME_CONTEXT rtx = new RUNTIME_CONTEXT(module);
@@ -29,24 +29,23 @@
             }
             else if (mode == "c")
             {
-                if (module.CreateExecutable("test.exe"))
+                if (module.CreateExecutable("out.exe"))
                 {
                     Console.WriteLine("Executable Created");
                     return;
                 }
             }
-
         }
 
         static void Main(string[] args)
         {
-            // if (args.Length == 0)
-            // {
-            //   Console.WriteLine("Usage: dotnet run <filename>");
-            //   return;
-            // }
-            string code = "FUNCTION BOOLEAN MAIN() NUMERIC d; d=1; PRINT d; END";
-            string filename = "test.sl";
+            if (args.Length == 0)
+            {
+              Console.WriteLine("Usage: dotnet run <filename>");
+              return;
+            }
+            string code;
+            string filename = args[0];
             try
             {
                code = ReadFile(filename);
@@ -55,9 +54,8 @@
             {
                 throw new Exception("Could not read file " + filename);
             }
-            string mode = args.Length > 0 ? args[0] : "c";
+            string mode = args.Length > 1 ? args[1] : "i";
             RunCode(code, mode);
-            // RunCode(code, "i");
-    }
+        }
     }
 }
