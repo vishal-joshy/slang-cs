@@ -1,138 +1,194 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Reflection.Emit;
 
 namespace SLANG
 {
-  public abstract class CompilationUnit
-  {
-    public abstract Symbol Execute(RuntimeContext rtx, ArrayList actuals);
-    public abstract bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx);
-  }
-
-  public abstract class PROC
-  {
-    public abstract Symbol Execute(RuntimeContext rtx, ArrayList actuals);
-    public abstract bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx);
-  }
-
-  public class TModule : CompilationUnit
-  {
-    private ArrayList _procedures = null;
-    private ArrayList _compiledProcedures = null;
-    private ExecutableGenerator _exeGenerator = null;
-
-    public TModule(ArrayList procedures)
+    public abstract class CompilationUnit
     {
-      _procedures = procedures;
+        public abstract SYMBOL Execute(RUNTIME_CONTEXT cont, ArrayList actuals);
+        public abstract bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont);
     }
 
-    public bool CreateExecutable(string exeName)
+    public abstract class PROC
     {
-      _exeGenerator = new ExecutableGenerator(this, exeName);
-      Compile(null);
-      _exeGenerator.Save();
-      return true;
+        public abstract SYMBOL Execute(RUNTIME_CONTEXT cont, ArrayList formals);
+        public abstract bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont);
     }
 
-    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
+    public class TModule : CompilationUnit
     {
-      _compiledProcedures = new ArrayList();
-      foreach (Procedure p in _procedures)
-      {
-        DNET_EXECUTABLE_GENERATION_CONTEXT context = new DNET_EXECUTABLE_GENERATION_CONTEXT(this, p, _exeGenerator.Type_Builder);
-        _compiledProcedures.Add(context);
-        p.Compile(context);
-      }
-      return true;
-    }
+        private ArrayList _procedures = null;
+        private ArrayList _compiledProcedures = null;
+        private ExeGenerator _exe = null;
 
-    public override Symbol Execute(RuntimeContext rtx, ArrayList actuals)
-    {
-      Procedure procedure = FindProcedure("MAIN");
-      if (procedure != null)
-      {
-        return procedure.Execute(rtx,actuals);
-      }
-      return null;
-    }
-
-    public MethodBuilder GetEntryPoint(string functionName)
-    {
-      foreach (DNET_EXECUTABLE_GENERATION_CONTEXT dtx in _compiledProcedures)
-      {
-        if (dtx.MethodName.Equals(functionName))
+        public TModule(ArrayList procs)
         {
-          return dtx.MethodHandle;
+            _procedures = procs;
         }
-      }
-      return null;
-    }
 
-    public Procedure FindProcedure(string name)
-    {
-      foreach (Procedure p in _procedures)
-      {
-        string pName = p.Name;
-        if (pName.ToUpper().CompareTo(name.ToUpper()) == 0)
+        public bool CreateExecutable(string name)
         {
-          return p;
+            _exe = new ExeGenerator(this, name);
+            Compile(null);
+            _exe.Save();
+            return true;
         }
-      }
-      return null;
+
+        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
+        {
+            _compiledProcedures = new ArrayList();
+            foreach (Procedure p in _procedures)
+            {
+                DNET_EXECUTABLE_GENERATION_CONTEXT dtx = new DNET_EXECUTABLE_GENERATION_CONTEXT(this, p, _exe.type_builder);
+                _compiledProcedures.Add(dtx);
+                p.Compile(dtx);
+            }
+            return true;
+        }
+
+        public override SYMBOL Execute(RUNTIME_CONTEXT cont, ArrayList actuals)
+        {
+            Procedure p = FindProcedure("Main");
+            if (p != null)
+            {
+                return p.Execute(cont, actuals);
+            }
+            return null;
+        }
+
+        public MethodBuilder GetEntryPoint(string funcName)
+        {
+            foreach (DNET_EXECUTABLE_GENERATION_CONTEXT cont in _compiledProcedures)
+            {
+                if (cont.MethodName.Equals(funcName))
+                {
+                    return cont.MethodHandle;
+                }
+            }
+            return null;
+        }
+
+        public Procedure FindProcedure(string str)
+        {
+            foreach (Procedure p in _procedures)
+            {
+                string pName = p.Name;
+
+                if (pName.ToUpper().CompareTo(str.ToUpper()) == 0)
+                    return p;
+            }
+            return null;
+        }
     }
-  }
 
-  public class Procedure:PROC{
-    public string Name;
-    public ArrayList Formals;
-    public ArrayList Statements;
-    public SymbolTable LocalVariables;
-    public Symbol ReturnValue=null;
-    public TYPE Type = TYPE.ILLEGAL;
-
-    public Procedure(string name, ArrayList statements, SymbolTable table , TYPE returnType){
-      Name = name;
-      Statements = statements;
-      LocalVariables = table;
-      Type = returnType;
-    }
-
-    public TYPE TypeCheck(CompilationContext cont){
-      return TYPE.NUMERIC;
-    }
-
-    public override Symbol Execute(RuntimeContext rtx, ArrayList actuals)
+    public class Procedure : PROC
     {
-      ArrayList vars = new ArrayList();
-      int j = 0;
+        private string _name;
+        private ArrayList _formals = null;
+        private ArrayList _statements = null;
+        private SymbolTable _locals = null;
+        private SYMBOL return_value = null;
+        private TYPE_INFO _type = TYPE_INFO.ILLEGAL;
 
-      if(Formals != null && actuals !=null){
-        j = 0;
-        foreach(Symbol s in Formals){
-          Symbol inf = actuals[j] as Symbol;
-          inf.Name = s.Name;
-          rtx.TABLE.Add(inf);
-          j++;
+        public Procedure(string name, ArrayList formals, ArrayList stats, SymbolTable locals, TYPE_INFO type)
+        {
+            _name = name;
+            _formals = formals;
+            _statements = stats;
+            _locals = locals;
+            _type = type;
         }
-      }
 
-      Interpreter i = new Interpreter();
-      foreach(Stmt s in Statements){
-        s.accept(rtx,i);
-        if(ReturnValue != null){
-          return ReturnValue;
+        public TYPE_INFO TYPE
+        {
+            get
+            {
+                return _type;
+            }
         }
-      }
-      return null;
-    }
 
-    public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT dtx)
-    {
-      foreach(Stmt s in Statements){
-        s.Compile(dtx);
-      }
-      dtx.CodeOutput.Emit(OpCodes.Ret);
-      return true;
+        public ArrayList FORMALS
+        {
+            get
+            {
+                return _formals;
+            }
+        }
+
+        public string Name
+        {
+            get
+            {
+                return _name;
+            }
+            set
+            {
+                _name = value;
+            }
+        }
+
+        public SYMBOL ReturnValue()
+        {
+            return return_value;
+        }
+
+        public TYPE_INFO TypeCheck(COMPILATION_CONTEXT cont)
+        {
+            return TYPE_INFO.NUMERIC;
+        }
+
+
+        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
+        {
+            if (_formals != null)
+            {
+                int i = 0;
+                foreach (SYMBOL b in _formals)
+                {
+                    System.Type type = (b.Type == TYPE_INFO.BOOL) ? typeof(bool) : (b.Type == TYPE_INFO.NUMERIC) ? typeof(double) : typeof(string);
+                    int s = cont.DeclareLocal(type);
+                    b.loc_position = s;
+                    cont.TABLE.Add(b);
+                    cont.CodeOutput.Emit(OpCodes.Ldarg, i);
+                    cont.CodeOutput.Emit(OpCodes.Stloc, cont.GetLocal(s));
+                    i++;
+                }
+            }
+
+            foreach (Statement e1 in _statements)
+            {
+                e1.Compile(cont);
+            }
+
+            cont.CodeOutput.Emit(OpCodes.Ret);
+            return true;
+        }
+
+        public override SYMBOL Execute(RUNTIME_CONTEXT cont, ArrayList actuals)
+        {
+            ArrayList vars = new ArrayList();
+            int i = 0;
+
+            if (_formals != null && actuals != null)
+            {
+                i = 0;
+                foreach (SYMBOL s in _formals)
+                {
+                    SYMBOL inf = actuals[i] as SYMBOL;
+                    inf.Name = s.Name;
+                    cont.TABLE.Add(inf);
+                    i++;
+                }
+            }
+            Interpreter interpreter = new Interpreter();
+            foreach (Statement e1 in _statements)
+            {
+                return_value = e1.accept(cont,interpreter);
+
+                if (return_value != null)
+                    return return_value;
+            }
+            return null;
+        }
     }
-  }
 }

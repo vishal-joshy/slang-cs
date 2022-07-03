@@ -1,11 +1,11 @@
 // Variable types
 namespace SLANG
 {
-  public enum TYPE
-  {
-    ILLEGAL,
-    NUMERIC,
-    BOOL,
-    STRING
-  }
+    public enum TYPE_INFO
+    {
+        ILLEGAL,
+        NUMERIC,
+        BOOL,
+        STRING
+    }
 }

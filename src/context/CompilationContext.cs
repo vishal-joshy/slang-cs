@@ -1,12 +1,16 @@
-namespace SLANG {
-  public class CompilationContext {
+namespace SLANG
+{
+  public class COMPILATION_CONTEXT
+  {
     private SymbolTable _table;
 
-    public CompilationContext() {
+    public COMPILATION_CONTEXT()
+    {
       _table = new SymbolTable();
     }
 
-    public SymbolTable TABLE {
+    public SymbolTable TABLE
+    {
       get => _table;
       set => _table = value;
     }

@@ -1,288 +1,345 @@
 using System.Collections;
 
-namespace SLANG {
-  public interface Visitor {
-    Symbol visit(RuntimeContext rtx, PrintStatement ps);
-    Symbol visit(RuntimeContext rtx, PrintLineStatement pl);
-    Symbol visit(RuntimeContext rtx, AssignmentStatement astmt);
-    Symbol visit(RuntimeContext rtx, VariableDeclarationStatement vds);
-    Symbol visit(RuntimeContext rtx, NumericConstant n);
-    Symbol visit(RuntimeContext rtx, BooleanConstant b);
-    Symbol visit(RuntimeContext rtx, StringLiteral s);
-    Symbol visit(RuntimeContext rtx, BinaryExpression bp);
-    Symbol visit(RuntimeContext rtx, UnaryPlus up);
-    Symbol visit(RuntimeContext rtx, UnaryMinus um);
-    Symbol visit(RuntimeContext rtx, Variable v);
-    Symbol visit(RuntimeContext rtx, RelationalExpression r);
-    Symbol visit(RuntimeContext rtx, LogicalExpression l);
-    Symbol visit(RuntimeContext rtx, LogicalNot ln);
-    Symbol visit(RuntimeContext rtx, IfStatement ifs);
-    Symbol visit(RuntimeContext rtx, WhileStatment ws);
-    Symbol visit(RuntimeContext rtx, ReturnStatement rs);
-    Symbol visit(RuntimeContext rtx, CallProcedureExpression cpe);
-  }
+namespace SLANG
+{
+    public interface IVisitor
+    {
+        // Expression
+        // Constants
+        SYMBOL Visit(RUNTIME_CONTEXT cont, BooleanConstant boolConst);
+        SYMBOL Visit(RUNTIME_CONTEXT cont, NumericConstant numConst);
+        SYMBOL Visit(RUNTIME_CONTEXT cont, StringLiteral str);
+        // Operations
+        SYMBOL Visit(RUNTIME_CONTEXT cont, BinaryExpression bExp);
+        SYMBOL Visit(RUNTIME_CONTEXT cont, UnaryExpression uExp);
+        SYMBOL Visit(RUNTIME_CONTEXT cont, LogicalExpression logicalExp);
+        SYMBOL Visit(RUNTIME_CONTEXT cont, LogicalNot lNotExp);
+        SYMBOL Visit(RUNTIME_CONTEXT cont, RelationalExpression relationExp);
+        // Variabe
+        SYMBOL Visit(RUNTIME_CONTEXT cont, Variable varExp);
+        // Function
+        SYMBOL Visit(RUNTIME_CONTEXT cont, CallProcedureExpression callProcExp);
 
-  public class Interpreter : Visitor {
-    public Symbol visit(RuntimeContext rtx, PrintStatement ps) {
-      Expression exp = ps.GetExpression();
-      Symbol result = exp.accept(rtx, this);
-      Console.Write(result.GetValueAsString());
-      return null;
+        // Statements
+        SYMBOL Visit(RUNTIME_CONTEXT cont, PrintStatement ps);
+        // Variables
+        SYMBOL Visit(RUNTIME_CONTEXT cont, VariableDeclStatement vds);
+        SYMBOL Visit(RUNTIME_CONTEXT cont, AssignmentStatement aStmt);
+        // Control
+        SYMBOL Visit(RUNTIME_CONTEXT cont, IfStatement ifStmt);
+        SYMBOL Visit(RUNTIME_CONTEXT cont, WhileStatement wStmt);
+        // Function
+        SYMBOL Visit(RUNTIME_CONTEXT cont, ReturnStatement rStmt);
     }
 
-    public Symbol visit(RuntimeContext rtx, PrintLineStatement pls) {
-      Expression exp = pls.GetExpression();
-      Symbol result = exp.accept(rtx, this);
-      Console.WriteLine(result.GetValueAsString());
-      return null;
-    }
+    public class Interpreter : IVisitor
+    {
+        // Expression
+        // Constants
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, BooleanConstant boolConst) => boolConst.GetConstant();
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, NumericConstant numConst) => numConst.GetConstant();
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, StringLiteral str) => str.GetConstant();
 
-    public Symbol visit(RuntimeContext rtx, AssignmentStatement astmt) {
-      Variable var = astmt.GetVariable();
-      Expression exp = astmt.GetExpression();
-      Symbol result = exp.accept(rtx, this);
-      rtx.TABLE.Assign(var, result);
-      return null;
-    }
+        // Operations
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, BinaryExpression bExp)
+        {
+            SYMBOL lEval = bExp.GetLExp().accept(cont,this);
+            SYMBOL rEval = bExp.GetRExp().accept(cont,this);
+            ARITHMETIC_OPERATOR op = bExp.GetOperator();
 
-    public Symbol visit(RuntimeContext rtx, VariableDeclarationStatement vds) {
-      Symbol s = vds.GetInfo();
-      rtx.TABLE.Add(s);
-      vds.Var = new Variable(s);
-      return null;
-    }
-    public Symbol visit(RuntimeContext rtx, NumericConstant n) {
-      return n.GetSymbol();
-    }
-    public Symbol visit(RuntimeContext rtx, BooleanConstant b) {
-      return b.GetSymbol();
-    }
-    public Symbol visit(RuntimeContext rtx, StringLiteral s) {
-      return s.GetSymbol();
-    }
+            if (lEval.Type == TYPE_INFO.STRING) //String concat
+            {
+                SYMBOL result = new SYMBOL("", TYPE_INFO.STRING);
+                result.StringValue = lEval.StringValue + rEval.StringValue;
+                return result;
+            }
+            else if (lEval.Type == TYPE_INFO.NUMERIC)
+            {
+                SYMBOL result = new SYMBOL("", TYPE_INFO.NUMERIC);
 
-    public Symbol visit(RuntimeContext rtx, BinaryExpression bp) {
-      Symbol lEval = bp.GetLExpression().accept(rtx, this);
-      Symbol rEval = bp.GetRExpression().accept(rtx, this);
-      OPERATOR op = bp.GetOperator();
+                switch (op)
+                {
+                    case ARITHMETIC_OPERATOR.PLUS: result.DoubleValue = lEval.DoubleValue + rEval.DoubleValue; break;
+                    case ARITHMETIC_OPERATOR.MINUS: result.DoubleValue = lEval.DoubleValue - rEval.DoubleValue; break;
+                    case ARITHMETIC_OPERATOR.MULT: result.DoubleValue = lEval.DoubleValue * rEval.DoubleValue; break;
+                    case ARITHMETIC_OPERATOR.DIV: result.DoubleValue = lEval.DoubleValue / rEval.DoubleValue; break;
+                    default: throw new Exception("Invalid operator for arithmetic operation");
+                }
 
-      if (lEval.Type != rEval.Type) {
-        throw new Exception("Type mismatch for binary operation");
-      }
-
-      if (lEval.Type == TYPE.NUMERIC) {
-        Symbol result = new Symbol();
-        result.Type= TYPE.NUMERIC;
-        result.Name = "";
-        switch (op) {
-          case OPERATOR.PLUS: result.DoubleValue = lEval.DoubleValue + rEval.DoubleValue; return result;
-          case OPERATOR.MINUS: result.DoubleValue = lEval.DoubleValue - rEval.DoubleValue; return result;
-          case OPERATOR.MULT: result.DoubleValue = lEval.DoubleValue * rEval.DoubleValue; return result;
-          case OPERATOR.DIV: result.DoubleValue = lEval.DoubleValue / rEval.DoubleValue; return result;
-          default: throw new Exception("Invalid operator");
+                return result;
+            }
+            else
+            {
+                throw new Exception("Invalid type");
+            }
         }
-      } else if (lEval.Type == TYPE.STRING) {
-        Symbol result = new Symbol();
-        result.Type = TYPE.STRING;
-        result.StringValue = lEval.StringValue + rEval.StringValue;
-        result.Name = "";
-        return result;
-      } else {
-        throw new Exception("Invalid types for binary plus");
-      }
-    }
 
-    public Symbol visit(RuntimeContext rtx, Variable v) {
-      if (rtx.TABLE == null) {
-        return null;
-      } else {
-        Symbol result = rtx.TABLE.Get(v.GetName());
-        return result;
-      }
-    }
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, UnaryExpression uExp)
+        {
+            SYMBOL eval = uExp.GetExpression().accept(cont,this);
+            ARITHMETIC_OPERATOR op = uExp.GetOperator();
+            SYMBOL result = new SYMBOL("", TYPE_INFO.NUMERIC);
 
-    public Symbol visit(RuntimeContext rtx, UnaryPlus up) {
-      Symbol eval = up.GetExpression().accept(rtx, this);
-      if (eval.Type == TYPE.NUMERIC) {
-        Symbol result = new Symbol();
-        result.Type = TYPE.NUMERIC;
-        result.DoubleValue = eval.DoubleValue;
-        result.Name = "";
-        return result;
-      } else {
-        throw new Exception("Invalid type for unary plus");
-      }
-    }
-    public Symbol visit(RuntimeContext rtx, UnaryMinus um) {
-      Symbol eval = um.GetExpression().accept(rtx, this);
-      if (eval.Type == TYPE.NUMERIC) {
-        Symbol result = new Symbol();
-        result.Type = TYPE.NUMERIC;
-        result.DoubleValue = eval.DoubleValue;
-        result.Name = "";
-        return result;
-      } else {
-        throw new Exception("Invalid type for unary minus");
-      }
-    }
+            if (eval.Type != TYPE_INFO.NUMERIC)
+            {
+                throw new Exception("Type mismatch");
+            }
+            if (op == ARITHMETIC_OPERATOR.PLUS)
+            {
+                result.DoubleValue = eval.DoubleValue;
+            }
+            else
+            {
+                result.DoubleValue = -eval.DoubleValue;
+            }
 
-    public Symbol visit(RuntimeContext rtx, RelationalExpression r) {
-      Symbol lEval = r.GetLExpression().accept(rtx, this);
-      Symbol rEval = r.GetRExpression().accept(rtx, this);
-      RELATIONAL_OPERATOR op = r.GetOperator();
-      Symbol result = new Symbol();
-      result.Name = "";
-      result.Type = TYPE.BOOL;
-
-      if (lEval.Type != rEval.Type) {
-        throw new Exception("Invalid types for relational operations");
-      }
-
-      if (lEval.Type == TYPE.NUMERIC) {
-        if (op == RELATIONAL_OPERATOR.EQUALITY)
-          result.BooleanValue = lEval.DoubleValue == rEval.DoubleValue;
-        else if (op == RELATIONAL_OPERATOR.NOTEQUALITY)
-          result.BooleanValue = lEval.DoubleValue != rEval.DoubleValue;
-        else if (op == RELATIONAL_OPERATOR.GREATER_THAN)
-          result.BooleanValue = lEval.DoubleValue > rEval.DoubleValue;
-        else if (op == RELATIONAL_OPERATOR.LESS_THAN)
-          result.BooleanValue = lEval.DoubleValue < rEval.DoubleValue;
-        else if (op == RELATIONAL_OPERATOR.GREATER_THAN_OR_EQUALITY)
-          result.BooleanValue = lEval.DoubleValue >= rEval.DoubleValue;
-        else if (op == RELATIONAL_OPERATOR.LESS_THAN_OR_EQUALITY)
-          result.BooleanValue = lEval.DoubleValue <= rEval.DoubleValue;
-        else
-          throw new Exception("Invalid Relational Operator");
-
-        return result;
-
-      } else if (lEval.Type == TYPE.STRING) {
-        if (op == RELATIONAL_OPERATOR.EQUALITY)
-          result.BooleanValue = String.Compare(lEval.StringValue, rEval.StringValue) == 0;
-        else if (op == RELATIONAL_OPERATOR.NOTEQUALITY)
-          result.BooleanValue = String.Compare(lEval.StringValue, rEval.StringValue) != 0;
-        else
-          result.BooleanValue = false;
-        return result;
-
-      } else if (lEval.Type == TYPE.BOOL) {
-        if (op == RELATIONAL_OPERATOR.EQUALITY)
-          result.BooleanValue = lEval.BooleanValue == rEval.BooleanValue;
-        else if (op == RELATIONAL_OPERATOR.NOTEQUALITY)
-          result.BooleanValue = lEval.BooleanValue != rEval.BooleanValue;
-        else
-          result.BooleanValue = false;
-        return result;
-      }
-      return null;
-    }
-
-    public Symbol visit(RuntimeContext rtx, LogicalExpression l) {
-      Symbol lEval = l.GetLExpression().accept(rtx, this);
-      Symbol rEval = l.GetRExpression().accept(rtx, this);
-      TOKEN op = l.GetOperator();
-
-      if (lEval.Type == TYPE.BOOL && rEval.Type == TYPE.BOOL) {
-        Symbol result = new Symbol();
-        result.Name = "";
-        result.Type = TYPE.BOOL;
-        if (op == TOKEN.AND)
-          result.BooleanValue = lEval.BooleanValue && rEval.BooleanValue;
-        else if (op == TOKEN.OR)
-          result.BooleanValue = lEval.BooleanValue || rEval.BooleanValue;
-        else
-          return null;
-
-        return result;
-      }
-      return null;
-    }
-
-    public Symbol visit(RuntimeContext rtx, LogicalNot ln) {
-      Symbol eval = ln.GetExpression().accept(rtx, this);
-
-      if (eval.Type == TYPE.BOOL) {
-        Symbol result = new Symbol();
-        result.Type = TYPE.BOOL;
-        result.Name = "";
-        result.BooleanValue = !eval.BooleanValue;
-        return result;
-      } else {
-        return null;
-      }
-    }
-
-    public Symbol visit(RuntimeContext rtx, IfStatement ifs) {
-      Symbol eval = ifs.GetCondition().accept(rtx, this);
-      if (eval.Type != TYPE.BOOL) {
-        throw new Exception("Condition evaluation failed");
-      }
-
-      if (eval.BooleanValue == true) {
-        ArrayList statements = ifs.GetStatements("trueStatements");
-        foreach (Stmt s in statements) {
-          s.accept(rtx, this);
+            return result;
         }
-      } else {
-        ArrayList statements = ifs.GetStatements("falseStatements");
-        if (statements != null) {
-          foreach (Stmt s in statements) {
-            s.accept(rtx, this);
-          }
+
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, LogicalExpression logicalExp)
+        {
+            SYMBOL lEval = logicalExp.GetLExp().accept(cont,this);
+            SYMBOL rEval = logicalExp.GetRExp().accept(cont,this);
+            TOKEN op = logicalExp.GetOperator();
+            SYMBOL result = new SYMBOL("", TYPE_INFO.BOOL);
+
+            if (lEval.Type != rEval.Type)
+                throw new Exception("Type mismatch");
+
+            if (lEval.Type != TYPE_INFO.BOOL)
+                throw new Exception("Invalid type for logical operation");
+
+            if (op == TOKEN.AND)
+                result.BooleanValue = (lEval.BooleanValue && rEval.BooleanValue);
+            else if (op == TOKEN.OR)
+                result.BooleanValue = (lEval.BooleanValue || rEval.BooleanValue);
+            else
+                throw new Exception("Invalid Logical Operator");
+
+            return result;
         }
-      }
-      return null;
-    }
 
-    public Symbol visit(RuntimeContext rtx, WhileStatment ws) {
-    Wloop:
-      Symbol condition = ws.GetCondition().accept(rtx, this);
-      ArrayList statements = ws.GetStatements();
-      if (condition == null || condition.Type != TYPE.BOOL) {
-        throw new Exception("Condition evaluation error");
-      }
-      if (condition.BooleanValue != true)
-        return null;
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, LogicalNot lNotExp)
+        {
+            SYMBOL eval = lNotExp.GetExpression().accept(cont,this);
 
-      if (condition.BooleanValue == true) {
-        Symbol tsp = null;
-        foreach (Stmt s in statements) {
-          tsp = s.accept(rtx, this);
-          if (tsp != null) {
-            return tsp;
-          }
+            if (eval.Type == TYPE_INFO.BOOL)
+            {
+                SYMBOL result = new SYMBOL("", TYPE_INFO.BOOL);
+                result.BooleanValue = !eval.BooleanValue;
+                return result;
+            }
+            else
+            {
+                throw new Exception("Invalid type for logical Expression");
+            }
+
         }
-      }
-      goto Wloop;
-    }
 
-    public Symbol visit(RuntimeContext rtx, ReturnStatement rs) {
-      Expression exp = rs.GetExpression();
-      rs.inf = exp == null ? null : exp.accept(rtx, this);
-      return rs.inf;
-    }
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, RelationalExpression relationalExp)
+        {
+            SYMBOL lEval = relationalExp.GetLExp().accept(cont,this);
+            SYMBOL rEval = relationalExp.GetRExp().accept(cont,this);
+            RELATIONAL_OPERATOR op = relationalExp.GetOperator();
 
-    public Symbol visit(RuntimeContext rtx, CallProcedureExpression cpe) {
-      Procedure procedure = cpe.GetProcedure();
-      ArrayList actuals = cpe.GetActuals();
-      if (procedure != null) {
-        RuntimeContext cont = new RuntimeContext(rtx.GetModule());
-        ArrayList lst = new ArrayList();
+            SYMBOL result = new SYMBOL("", TYPE_INFO.BOOL);
 
-        foreach (Expression e in actuals) {
-          lst.Add(e.accept(rtx, this));
+            if (lEval.Type == TYPE_INFO.NUMERIC && rEval.Type == TYPE_INFO.NUMERIC)
+            {
+                if (op == RELATIONAL_OPERATOR.EQUALITY)
+                    result.BooleanValue = lEval.DoubleValue == rEval.DoubleValue;
+                else if (op == RELATIONAL_OPERATOR.NOTEQUALITY)
+                    result.BooleanValue = lEval.DoubleValue != rEval.DoubleValue;
+                else if (op == RELATIONAL_OPERATOR.GREATER_THAN)
+                    result.BooleanValue = lEval.DoubleValue > rEval.DoubleValue;
+                else if (op == RELATIONAL_OPERATOR.GREATER_THAN_OR_EQUALITY)
+                    result.BooleanValue = lEval.DoubleValue >= rEval.DoubleValue;
+                else if (op == RELATIONAL_OPERATOR.LESS_THAN)
+                    result.BooleanValue = lEval.DoubleValue < rEval.DoubleValue;
+                else if (op == RELATIONAL_OPERATOR.LESS_THAN_OR_EQUALITY)
+                    result.BooleanValue = lEval.DoubleValue <= rEval.DoubleValue;
+
+                return result;
+            }
+
+            else if (lEval.Type == TYPE_INFO.STRING && rEval.Type == TYPE_INFO.STRING)
+            {
+                if (op == RELATIONAL_OPERATOR.EQUALITY)
+                {
+                    result.BooleanValue = (String.Compare(lEval.StringValue, rEval.StringValue) == 0) ? true : false;
+                }
+                else if (op == RELATIONAL_OPERATOR.NOTEQUALITY)
+                {
+                    result.BooleanValue = String.Compare(lEval.StringValue, rEval.StringValue) != 0;
+                }
+                else
+                {
+                    result.BooleanValue = false;
+                }
+                return result;
+            }
+
+            if (lEval.Type == TYPE_INFO.BOOL && rEval.Type == TYPE_INFO.BOOL)
+            {
+                if (op == RELATIONAL_OPERATOR.EQUALITY)
+                    result.BooleanValue = lEval.BooleanValue == rEval.BooleanValue;
+                else if (op == RELATIONAL_OPERATOR.NOTEQUALITY)
+                    result.BooleanValue = lEval.BooleanValue != rEval.BooleanValue;
+                else
+                    result.BooleanValue = false;
+
+                return result;
+            }
+            return null;
         }
-        return procedure.Execute(cont, lst);
-      } else {
-        procedure = rtx.GetModule().FindProcedure(cpe.GetProcedureName());
-        RuntimeContext cont = new RuntimeContext(rtx.GetModule());
-        ArrayList lst = new ArrayList();
 
-        foreach (Expression e in actuals) {
-          lst.Add(e.accept(rtx, this));
+        // Variable
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, Variable varExp)
+        {
+            string variableName = varExp.GetName();
+            if (cont.TABLE == null)
+            {
+                return null;
+            }
+            else
+            {
+                SYMBOL a = cont.TABLE.Get(variableName);
+                return a;
+            }
         }
-        return procedure.Execute(cont, lst);
-      }
+
+        // Function
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, CallProcedureExpression callProcExp)
+        {
+            string procedureName = callProcExp.GetProcedureName();
+            Procedure procedure = callProcExp.GetProcedure();
+            ArrayList actuals = callProcExp.GetActuals();
+
+            if (procedure != null)
+            {
+                RUNTIME_CONTEXT ctx = new RUNTIME_CONTEXT(cont.GetProgram());
+                ArrayList lst = new ArrayList();
+                foreach (Expression ex in actuals)
+                {
+                    lst.Add(ex.accept(cont,this));
+                }
+                return procedure.Execute(ctx, lst);
+            }
+            else
+            {
+                procedure = cont.GetProgram().FindProcedure(procedureName);
+                RUNTIME_CONTEXT ctx = new RUNTIME_CONTEXT(cont.GetProgram());
+                ArrayList lst = new ArrayList();
+
+                foreach (Expression ex in actuals)
+                {
+                    lst.Add(ex.accept(cont,this));
+                }
+                return procedure.Execute(ctx, lst);
+            }
+        }
+
+        // Statements
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, PrintStatement ps)
+        {
+            SYMBOL eval = ps.GetExpression().accept(cont,this);
+            bool printLine = ps.GetIsPrintLine();
+            string result = eval.GetValueAsString();
+
+            if (printLine)
+            {
+                Console.WriteLine(result);
+            }
+            else
+            {
+                Console.Write(result);
+            }
+            return null;
+        }
+
+        // Variable
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, VariableDeclStatement vds)
+        {
+            SYMBOL inf = vds.GetSymbol();
+            cont.TABLE.Add(inf);
+            vds.SetVar(inf);
+            return null;
+        }
+
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, AssignmentStatement aStmt)
+        {
+            SYMBOL eval = aStmt.GetExpression().accept(cont,this);
+            Variable var = aStmt.GetVariable();
+            cont.TABLE.Assign(var, eval);
+            return null;
+        }
+
+        // Control
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, IfStatement ifStmt)
+        {
+            Expression exp = ifStmt.GetCondition();
+            ArrayList trueStatements = ifStmt.GetTruePart();
+            ArrayList elseStatements = ifStmt.GetElsePart();
+
+            SYMBOL condition = exp.accept(cont,this);
+
+            if (condition == null || condition.Type != TYPE_INFO.BOOL)
+                return null;
+
+            SYMBOL result = null;
+
+            if (condition.BooleanValue == true)
+            {
+                foreach (Statement s in trueStatements)
+                {
+                    result = s.accept(cont,this);
+                    if (result != null)
+                        return result;
+                }
+            }
+            else if (elseStatements != null) //condition == false and else statement exists
+            {
+                foreach (Statement s in elseStatements)
+                {
+                    result = s.accept(cont,this);
+                    if (result != null)
+                        return result;
+                }
+            }
+            return null;
+        }
+
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, WhileStatement wStmt)
+        {
+            ArrayList statements = wStmt.GetBody();
+
+        Loop:
+
+            SYMBOL condition = wStmt.GetCondition().accept(cont,this);
+
+            if (condition == null || condition.Type != TYPE_INFO.BOOL)
+                return null;
+
+            if (condition.BooleanValue != true)
+                return null;
+
+            SYMBOL tsp = null;
+            foreach (Statement rst in statements)
+            {
+                tsp = rst.accept(cont,this);
+                if (tsp != null)
+                {
+                    return tsp;
+                }
+            }
+            goto Loop;
+        }
+
+        public SYMBOL Visit(RUNTIME_CONTEXT cont, ReturnStatement rStmt)
+        {
+            SYMBOL s = (rStmt.GetExpression() == null) ? null : rStmt.GetExpression().accept(cont,this);
+            rStmt.SetSymbol(s);
+            return s;
+        }
     }
-  }
 }
