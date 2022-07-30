@@ -155,9 +155,11 @@ namespace SLANG
                 }
             }
 
+            Compiler c = new Compiler();
+
             foreach (Statement e1 in _statements)
             {
-                e1.Compile(cont);
+                e1.accept(cont,c);
             }
 
             cont.CodeOutput.Emit(OpCodes.Ret);

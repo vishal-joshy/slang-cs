@@ -31,7 +31,7 @@ namespace SLANG
         public ArrayList GetActuals() => _actuals;
         public Procedure GetProcedure() => _procedure;
 
-        public override SYMBOL accept(RUNTIME_CONTEXT cont, IVisitor v)
+        public override SYMBOL accept(CONTEXT cont, IVisitor v)
         {
             return v.Visit(cont, this);
         }
@@ -47,26 +47,5 @@ namespace SLANG
 
         public override TYPE_INFO get_type() => _type;
 
-
-        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
-        {
-            if (_procedure == null)
-            {
-                _procedure = cont.GetProgram().FindProcedure(_procedureName);
-            }
-
-            string name = _procedure.Name;
-
-            TModule module = cont.GetProgram();
-            MethodBuilder MBuilder = module.GetEntryPoint(name);
-
-            foreach (Expression exp in _actuals)
-            {
-                exp.Compile(cont);
-            }
-
-            cont.CodeOutput.Emit(OpCodes.Call, MBuilder);
-            return true;
-        }
     }
 }

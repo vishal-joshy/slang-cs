@@ -37,6 +37,8 @@ namespace SLANG
 
         public string GetName() => _name;
 
+        public override TYPE_INFO get_type() => _type;
+
         public string Name
         {
             get
@@ -49,7 +51,7 @@ namespace SLANG
             }
         }
 
-        public override SYMBOL accept(RUNTIME_CONTEXT cont, IVisitor v)
+        public override SYMBOL accept(CONTEXT cont, IVisitor v)
         {
             return v.Visit(cont, this);
         }
@@ -70,16 +72,6 @@ namespace SLANG
                 }
                 return TYPE_INFO.ILLEGAL;
             }
-        }
-
-        public override TYPE_INFO get_type() => _type;
-
-        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
-        {
-            SYMBOL info = cont.TABLE.Get(_name);
-            LocalBuilder lb = cont.GetLocal(info.loc_position);
-            cont.CodeOutput.Emit(OpCodes.Ldloc, lb);
-            return true;
         }
     }
 }

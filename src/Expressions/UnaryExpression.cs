@@ -17,7 +17,9 @@ namespace SLANG
         public Expression GetExpression() => _exp;
         public ARITHMETIC_OPERATOR GetOperator() => _operator;
 
-        public override SYMBOL accept(RUNTIME_CONTEXT cont, IVisitor v)
+        public override TYPE_INFO get_type() => _type;
+
+        public override SYMBOL accept(CONTEXT cont, IVisitor v)
         {
             return v.Visit(cont, this);
         }
@@ -37,16 +39,5 @@ namespace SLANG
             }
         }
 
-        public override TYPE_INFO get_type() => _type;
-
-        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
-        {
-            _exp.Compile(cont);
-            if (_operator == ARITHMETIC_OPERATOR.MINUS)
-            {
-                cont.CodeOutput.Emit(OpCodes.Neg);
-            }
-            return true;
-        }
     }
 }

@@ -2,7 +2,6 @@ namespace SLANG
 {
     public abstract class Statement
     {
-        public abstract bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont);
-        public abstract SYMBOL accept(RUNTIME_CONTEXT cont, IVisitor v);
+        public abstract SYMBOL accept(CONTEXT cont, IVisitor v);
     }
 }

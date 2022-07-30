@@ -6,42 +6,42 @@ namespace SLANG
     {
         // Expression
         // Constants
-        SYMBOL Visit(RUNTIME_CONTEXT cont, BooleanConstant boolConst);
-        SYMBOL Visit(RUNTIME_CONTEXT cont, NumericConstant numConst);
-        SYMBOL Visit(RUNTIME_CONTEXT cont, StringLiteral str);
+        SYMBOL Visit(CONTEXT cont, BooleanConstant boolConst);
+        SYMBOL Visit(CONTEXT cont, NumericConstant numConst);
+        SYMBOL Visit(CONTEXT cont, StringLiteral str);
         // Operations
-        SYMBOL Visit(RUNTIME_CONTEXT cont, BinaryExpression bExp);
-        SYMBOL Visit(RUNTIME_CONTEXT cont, UnaryExpression uExp);
-        SYMBOL Visit(RUNTIME_CONTEXT cont, LogicalExpression logicalExp);
-        SYMBOL Visit(RUNTIME_CONTEXT cont, LogicalNot lNotExp);
-        SYMBOL Visit(RUNTIME_CONTEXT cont, RelationalExpression relationExp);
+        SYMBOL Visit(CONTEXT cont, BinaryExpression bExp);
+        SYMBOL Visit(CONTEXT cont, UnaryExpression uExp);
+        SYMBOL Visit(CONTEXT cont, LogicalExpression logicalExp);
+        SYMBOL Visit(CONTEXT cont, LogicalNot lNotExp);
+        SYMBOL Visit(CONTEXT cont, RelationalExpression relationExp);
         // Variabe
-        SYMBOL Visit(RUNTIME_CONTEXT cont, Variable varExp);
+        SYMBOL Visit(CONTEXT cont, Variable varExp);
         // Function
-        SYMBOL Visit(RUNTIME_CONTEXT cont, CallProcedureExpression callProcExp);
+        SYMBOL Visit(CONTEXT cont, CallProcedureExpression callProcExp);
 
         // Statements
-        SYMBOL Visit(RUNTIME_CONTEXT cont, PrintStatement ps);
+        SYMBOL Visit(CONTEXT cont, PrintStatement ps);
         // Variables
-        SYMBOL Visit(RUNTIME_CONTEXT cont, VariableDeclStatement vds);
-        SYMBOL Visit(RUNTIME_CONTEXT cont, AssignmentStatement aStmt);
+        SYMBOL Visit(CONTEXT cont, VariableDeclStatement vds);
+        SYMBOL Visit(CONTEXT cont, AssignmentStatement aStmt);
         // Control
-        SYMBOL Visit(RUNTIME_CONTEXT cont, IfStatement ifStmt);
-        SYMBOL Visit(RUNTIME_CONTEXT cont, WhileStatement wStmt);
+        SYMBOL Visit(CONTEXT cont, IfStatement ifStmt);
+        SYMBOL Visit(CONTEXT cont, WhileStatement wStmt);
         // Function
-        SYMBOL Visit(RUNTIME_CONTEXT cont, ReturnStatement rStmt);
+        SYMBOL Visit(CONTEXT cont, ReturnStatement rStmt);
     }
 
     public class Interpreter : IVisitor
     {
         // Expression
         // Constants
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, BooleanConstant boolConst) => boolConst.GetConstant();
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, NumericConstant numConst) => numConst.GetConstant();
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, StringLiteral str) => str.GetConstant();
+        public SYMBOL Visit(CONTEXT cont, BooleanConstant boolConst) => boolConst.GetConstant();
+        public SYMBOL Visit(CONTEXT cont, NumericConstant numConst) => numConst.GetConstant();
+        public SYMBOL Visit(CONTEXT cont, StringLiteral str) => str.GetConstant();
 
         // Operations
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, BinaryExpression bExp)
+        public SYMBOL Visit(CONTEXT cont, BinaryExpression bExp)
         {
             SYMBOL lEval = bExp.GetLExp().accept(cont,this);
             SYMBOL rEval = bExp.GetRExp().accept(cont,this);
@@ -74,7 +74,7 @@ namespace SLANG
             }
         }
 
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, UnaryExpression uExp)
+        public SYMBOL Visit(CONTEXT cont, UnaryExpression uExp)
         {
             SYMBOL eval = uExp.GetExpression().accept(cont,this);
             ARITHMETIC_OPERATOR op = uExp.GetOperator();
@@ -96,7 +96,7 @@ namespace SLANG
             return result;
         }
 
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, LogicalExpression logicalExp)
+        public SYMBOL Visit(CONTEXT cont, LogicalExpression logicalExp)
         {
             SYMBOL lEval = logicalExp.GetLExp().accept(cont,this);
             SYMBOL rEval = logicalExp.GetRExp().accept(cont,this);
@@ -119,7 +119,7 @@ namespace SLANG
             return result;
         }
 
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, LogicalNot lNotExp)
+        public SYMBOL Visit(CONTEXT cont, LogicalNot lNotExp)
         {
             SYMBOL eval = lNotExp.GetExpression().accept(cont,this);
 
@@ -136,7 +136,7 @@ namespace SLANG
 
         }
 
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, RelationalExpression relationalExp)
+        public SYMBOL Visit(CONTEXT cont, RelationalExpression relationalExp)
         {
             SYMBOL lEval = relationalExp.GetLExp().accept(cont,this);
             SYMBOL rEval = relationalExp.GetRExp().accept(cont,this);
@@ -194,7 +194,7 @@ namespace SLANG
         }
 
         // Variable
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, Variable varExp)
+        public SYMBOL Visit(CONTEXT cont, Variable varExp)
         {
             string variableName = varExp.GetName();
             if (cont.TABLE == null)
@@ -209,7 +209,7 @@ namespace SLANG
         }
 
         // Function
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, CallProcedureExpression callProcExp)
+        public SYMBOL Visit(CONTEXT cont, CallProcedureExpression callProcExp)
         {
             string procedureName = callProcExp.GetProcedureName();
             Procedure procedure = callProcExp.GetProcedure();
@@ -240,7 +240,7 @@ namespace SLANG
         }
 
         // Statements
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, PrintStatement ps)
+        public SYMBOL Visit(CONTEXT cont, PrintStatement ps)
         {
             SYMBOL eval = ps.GetExpression().accept(cont,this);
             bool printLine = ps.GetIsPrintLine();
@@ -258,7 +258,7 @@ namespace SLANG
         }
 
         // Variable
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, VariableDeclStatement vds)
+        public SYMBOL Visit(CONTEXT cont, VariableDeclStatement vds)
         {
             SYMBOL inf = vds.GetSymbol();
             cont.TABLE.Add(inf);
@@ -266,7 +266,7 @@ namespace SLANG
             return null;
         }
 
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, AssignmentStatement aStmt)
+        public SYMBOL Visit(CONTEXT cont, AssignmentStatement aStmt)
         {
             SYMBOL eval = aStmt.GetExpression().accept(cont,this);
             Variable var = aStmt.GetVariable();
@@ -275,7 +275,7 @@ namespace SLANG
         }
 
         // Control
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, IfStatement ifStmt)
+        public SYMBOL Visit(CONTEXT cont, IfStatement ifStmt)
         {
             Expression exp = ifStmt.GetCondition();
             ArrayList trueStatements = ifStmt.GetTruePart();
@@ -309,7 +309,7 @@ namespace SLANG
             return null;
         }
 
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, WhileStatement wStmt)
+        public SYMBOL Visit(CONTEXT cont, WhileStatement wStmt)
         {
             ArrayList statements = wStmt.GetBody();
 
@@ -335,7 +335,7 @@ namespace SLANG
             goto Loop;
         }
 
-        public SYMBOL Visit(RUNTIME_CONTEXT cont, ReturnStatement rStmt)
+        public SYMBOL Visit(CONTEXT cont, ReturnStatement rStmt)
         {
             SYMBOL s = (rStmt.GetExpression() == null) ? null : rStmt.GetExpression().accept(cont,this);
             rStmt.SetSymbol(s);

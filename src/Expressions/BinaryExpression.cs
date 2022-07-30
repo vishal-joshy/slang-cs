@@ -19,7 +19,7 @@ namespace SLANG
         public Expression GetRExp() => _rExp;
         public ARITHMETIC_OPERATOR GetOperator() => _operator;
 
-        public override SYMBOL accept(RUNTIME_CONTEXT cont, IVisitor v)
+        public override SYMBOL accept(CONTEXT cont, IVisitor v)
         {
             return v.Visit(cont, this);
         }
@@ -41,29 +41,5 @@ namespace SLANG
         }
 
         public override TYPE_INFO get_type() => _type;
-
-        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
-        {
-            _lExp.Compile(cont);
-            _rExp.Compile(cont);
-
-            if (_type == TYPE_INFO.STRING)
-            {
-                Type[] str2 = { typeof(string), typeof(string) };
-                cont.CodeOutput.Emit(OpCodes.Call, typeof(string).GetMethod("Concat", str2));
-            }
-            else
-            {
-                switch (_operator)
-                {
-                    case ARITHMETIC_OPERATOR.PLUS: cont.CodeOutput.Emit(OpCodes.Add); break;
-                    case ARITHMETIC_OPERATOR.MINUS: cont.CodeOutput.Emit(OpCodes.Sub); break;
-                    case ARITHMETIC_OPERATOR.MULT: cont.CodeOutput.Emit(OpCodes.Mul); break;
-                    case ARITHMETIC_OPERATOR.DIV: cont.CodeOutput.Emit(OpCodes.Div); break;
-                    default: throw new Exception("Invalid operator for arithmetic operation");
-                }
-            }
-            return true;
-        }
     }
 }

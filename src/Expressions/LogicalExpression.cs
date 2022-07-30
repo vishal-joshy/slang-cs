@@ -19,7 +19,7 @@ namespace SLANG
         public Expression GetRExp() => _rExp;
         public TOKEN GetOperator() => _operator;
 
-        public override SYMBOL accept(RUNTIME_CONTEXT cont, IVisitor v)
+        public override SYMBOL accept(CONTEXT cont, IVisitor v)
         {
             return v.Visit(cont, this);
         }
@@ -40,19 +40,6 @@ namespace SLANG
             }
         }
 
-        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
-        {
-            _lExp.Compile(cont);
-            _rExp.Compile(cont);
-
-            if (_operator == TOKEN.AND)
-                cont.CodeOutput.Emit(OpCodes.And);
-            else if (_operator == TOKEN.OR)
-                cont.CodeOutput.Emit(OpCodes.Or);
-
-            return true;
-        }
-
         public override TYPE_INFO get_type() => _type;
     }
 
@@ -70,7 +57,7 @@ namespace SLANG
         public Expression GetExpression() => _exp;
 
 
-        public override SYMBOL accept(RUNTIME_CONTEXT cont, IVisitor v)
+        public override SYMBOL accept(CONTEXT cont, IVisitor v)
         {
             return v.Visit(cont, this);
         }
@@ -88,18 +75,6 @@ namespace SLANG
             {
                 throw new Exception("Wrong Type in expression");
             }
-        }
-
-        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
-        {
-            _exp.Compile(cont);
-
-            cont.CodeOutput.Emit(OpCodes.Ldc_I4, 1);
-            cont.CodeOutput.Emit(OpCodes.Ceq);
-            cont.CodeOutput.Emit(OpCodes.Ldc_I4, 0);
-            cont.CodeOutput.Emit(OpCodes.Ceq);
-
-            return true;
         }
 
         public override TYPE_INFO get_type() => _type;

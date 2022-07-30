@@ -18,19 +18,9 @@ namespace SLANG
             _inf = inf;
         }
 
-        public override SYMBOL accept(RUNTIME_CONTEXT cont, IVisitor v)
+        public override SYMBOL accept(CONTEXT cont, IVisitor v)
         {
             return v.Visit(cont, this);
-        }
-
-        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
-        {
-            if (_exp != null)
-            {
-                _exp.Compile(cont);
-            }
-            cont.CodeOutput.Emit(OpCodes.Ret);
-            return true;
         }
     }
 }

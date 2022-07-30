@@ -20,42 +20,9 @@ namespace SLANG
         public ArrayList GetTruePart() => _trueStatements;
         public ArrayList GetElsePart() => _elseStatements;
 
-        public override SYMBOL accept(RUNTIME_CONTEXT cont, IVisitor v)
+        public override SYMBOL accept(CONTEXT cont, IVisitor v)
         {
             return v.Visit(cont, this);
-        }
-
-        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
-        {
-            System.Reflection.Emit.Label trueLabel, falseLabel;
-            trueLabel = cont.CodeOutput.DefineLabel();
-            falseLabel = cont.CodeOutput.DefineLabel();
-
-            _condition.Compile(cont);
-
-            cont.CodeOutput.Emit(OpCodes.Ldc_I4, 1);
-            cont.CodeOutput.Emit(OpCodes.Ceq);
-
-            cont.CodeOutput.Emit(OpCodes.Brfalse, falseLabel);
-
-            foreach (Statement s in _trueStatements)
-            {
-                s.Compile(cont);
-            }
-
-            cont.CodeOutput.Emit(OpCodes.Br, trueLabel);
-
-            cont.CodeOutput.MarkLabel(falseLabel);
-
-            if (_elseStatements != null)
-            {
-                foreach (Statement s in _elseStatements)
-                {
-                    s.Compile(cont);
-                }
-            }
-            cont.CodeOutput.MarkLabel(trueLabel);
-            return true;
         }
     }
 }

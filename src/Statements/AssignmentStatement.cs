@@ -22,21 +22,9 @@ namespace SLANG
         public Expression GetExpression() => _exp;
         public Variable GetVariable() => _variable;
 
-        public override SYMBOL accept(RUNTIME_CONTEXT cont, IVisitor v)
+        public override SYMBOL accept(CONTEXT cont, IVisitor v)
         {
             return v.Visit(cont, this);
-        }
-
-        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
-        {
-            if (!_exp.Compile(cont))
-            {
-                throw new Exception("Compilation in error string");
-            }
-            SYMBOL info = cont.TABLE.Get(_variable.Name);
-            LocalBuilder lb = cont.GetLocal(info.loc_position);
-            cont.CodeOutput.Emit(OpCodes.Stloc, lb);
-            return true;
         }
     }
 }

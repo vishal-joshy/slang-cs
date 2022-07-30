@@ -20,7 +20,9 @@ namespace SLANG
         public Expression GetRExp() => _rExp;
         public RELATIONAL_OPERATOR GetOperator() => _operator;
 
-        public override SYMBOL accept(RUNTIME_CONTEXT cont, IVisitor v)
+        public override TYPE_INFO get_type() => _type;
+
+        public override SYMBOL accept(CONTEXT cont, IVisitor v)
         {
             return v.Visit(cont, this);
         }
@@ -46,72 +48,6 @@ namespace SLANG
             }
             _opType = lEval;
             _type = TYPE_INFO.BOOL;
-            return _type;
-        }
-
-        private bool CompileStringRelOp(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
-        {
-            _lExp.Compile(cont);
-            _rExp.Compile(cont);
-
-            Type[] str2 = { typeof(string), typeof(string) };
-
-            cont.CodeOutput.Emit(OpCodes.Call, typeof(string).GetMethod("Compare", str2));
-
-            if (_operator == RELATIONAL_OPERATOR.EQUALITY)
-            {
-                cont.CodeOutput.Emit(OpCodes.Ldc_I4, 0);
-                cont.CodeOutput.Emit(OpCodes.Ceq);
-            }
-            else
-            {
-                cont.CodeOutput.Emit(OpCodes.Ldc_I4, 0);
-                cont.CodeOutput.Emit(OpCodes.Ceq);
-                cont.CodeOutput.Emit(OpCodes.Ldc_I4, 0);
-                cont.CodeOutput.Emit(OpCodes.Ceq);
-            }
-            return true;
-        }
-
-        public override bool Compile(DNET_EXECUTABLE_GENERATION_CONTEXT cont)
-        {
-            if (_opType == TYPE_INFO.STRING)
-            {
-                return CompileStringRelOp(cont);
-            }
-
-            _lExp.Compile(cont);
-            _rExp.Compile(cont);
-
-            if (_operator == RELATIONAL_OPERATOR.EQUALITY)
-                cont.CodeOutput.Emit(OpCodes.Ceq);
-            else if (_operator == RELATIONAL_OPERATOR.GREATER_THAN)
-                cont.CodeOutput.Emit(OpCodes.Cgt);
-            else if (_operator == RELATIONAL_OPERATOR.LESS_THAN)
-                cont.CodeOutput.Emit(OpCodes.Clt);
-            else if (_operator == RELATIONAL_OPERATOR.NOTEQUALITY)
-            {
-                cont.CodeOutput.Emit(OpCodes.Ceq);
-                cont.CodeOutput.Emit(OpCodes.Ldc_I4, 0);
-                cont.CodeOutput.Emit(OpCodes.Ceq);
-            }
-            else if (_operator == RELATIONAL_OPERATOR.GREATER_THAN_OR_EQUALITY)
-            {
-                cont.CodeOutput.Emit(OpCodes.Clt);
-                cont.CodeOutput.Emit(OpCodes.Ldc_I4, 0);
-                cont.CodeOutput.Emit(OpCodes.Ceq);
-            }
-            else if (_operator == RELATIONAL_OPERATOR.LESS_THAN_OR_EQUALITY)
-            {
-                cont.CodeOutput.Emit(OpCodes.Cgt);
-                cont.CodeOutput.Emit(OpCodes.Ldc_I4, 0);
-                cont.CodeOutput.Emit(OpCodes.Ceq);
-            }
-            return true;
-        }
-
-        public override TYPE_INFO get_type()
-        {
             return _type;
         }
     }
